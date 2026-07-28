@@ -171,8 +171,8 @@ function OverlayContent({
   ];
 
   return (
-    <div className="flex max-h-[min(80vh,720px)] flex-col">
-      <div className={`relative h-28 shrink-0 overflow-hidden rounded-t-[18px] bg-gradient-to-br sm:h-36 ${program.banner}`}>
+    <div className="flex max-h-full flex-col">
+      <div className={`relative h-24 shrink-0 overflow-hidden rounded-t-[18px] bg-gradient-to-br sm:h-28 ${program.banner}`}>
         <div className="absolute inset-0 bg-gradient-to-t from-[#0d1326] via-[#0d1326]/40 to-transparent" />
         <button
           type="button"
@@ -249,8 +249,17 @@ export default function Internships() {
   const [isMobile, setIsMobile] = useState(false);
   const [visible, setVisible] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [panelPos, setPanelPos] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
+
   const sectionRef = useRef<HTMLDivElement>(null);
   const sectionRootRef = useRef<HTMLElement>(null);
+  const cardRefs = useRef<Record<string, HTMLElement | null>>({});
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const INITIAL_COUNT = 4;
   const initialPrograms = internshipPrograms.slice(0, INITIAL_COUNT);
@@ -263,6 +272,55 @@ export default function Internships() {
     setIsMobile(window.matchMedia("(max-width: 639px)").matches);
   }, []);
 
+  const updatePanelPosition = useCallback(() => {
+    if (!selectedId || !sectionRef.current) return;
+    const card = cardRefs.current[selectedId];
+    if (!card) return;
+
+    const containerRect = sectionRef.current.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const gap = 12;
+    const containerWidth = sectionRef.current.clientWidth;
+
+    const preferredWidth = Math.min(Math.max(cardRect.width, 420), Math.min(560, containerWidth));
+    const spaceBelow = window.innerHeight - cardRect.bottom - 24;
+    const spaceRight = containerRect.right - cardRect.right - gap;
+    const spaceLeft = cardRect.left - containerRect.left - gap;
+
+    let top: number;
+    let left: number;
+    let width = preferredWidth;
+    let maxHeight: number;
+
+    const canPlaceRight = spaceRight >= preferredWidth;
+    const canPlaceLeft = spaceLeft >= preferredWidth;
+    const besideSpace = Math.max(
+      canPlaceRight ? spaceRight : 0,
+      canPlaceLeft ? spaceLeft : 0
+    );
+    const placeBeside = besideSpace > 0 && besideSpace >= spaceBelow;
+
+    if (placeBeside) {
+      width = preferredWidth;
+      if (canPlaceRight && (!canPlaceLeft || spaceRight >= spaceLeft)) {
+        left = cardRect.right - containerRect.left + gap;
+      } else {
+        left = cardRect.left - containerRect.left - width - gap;
+      }
+      top = cardRect.top - containerRect.top;
+      maxHeight = Math.max(280, Math.min(window.innerHeight - Math.max(cardRect.top, 16) - 24, 640));
+    } else {
+      // Anchor directly below the clicked card
+      width = Math.min(Math.max(cardRect.width, 420), Math.min(640, containerWidth));
+      left = cardRect.left - containerRect.left + (cardRect.width - width) / 2;
+      left = Math.max(0, Math.min(left, containerWidth - width));
+      top = cardRect.bottom - containerRect.top + gap;
+      maxHeight = Math.max(280, Math.min(Math.max(spaceBelow, 320), 640));
+    }
+
+    setPanelPos({ top, left, width, maxHeight });
+  }, [selectedId]);
+
   useEffect(() => {
     updateMobile();
     window.addEventListener("resize", updateMobile);
@@ -272,16 +330,47 @@ export default function Internships() {
   useEffect(() => {
     if (!selectedId) {
       setVisible(false);
+      setPanelPos(null);
       return;
     }
 
-    requestAnimationFrame(() => setVisible(true));
-    document.body.style.overflow = isMobile ? "hidden" : "";
+    const card = cardRefs.current[selectedId];
+    card?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+
+    if (isMobile) {
+      setVisible(true);
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+
+    updatePanelPosition();
+    requestAnimationFrame(() => {
+      updatePanelPosition();
+      setVisible(true);
+    });
+
+    window.addEventListener("resize", updatePanelPosition);
+    window.addEventListener("scroll", updatePanelPosition, { passive: true });
 
     return () => {
+      window.removeEventListener("resize", updatePanelPosition);
+      window.removeEventListener("scroll", updatePanelPosition);
       document.body.style.overflow = "";
     };
-  }, [selectedId, isMobile]);
+  }, [selectedId, isMobile, updatePanelPosition]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") closePanel();
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [selectedId]);
 
   function openProgram(id: string) {
     if (selectedId === id) {
@@ -289,12 +378,16 @@ export default function Internships() {
       return;
     }
     setVisible(false);
+    setPanelPos(null);
     setSelectedId(id);
   }
 
   function closePanel() {
     setVisible(false);
-    setTimeout(() => setSelectedId(null), 220);
+    setTimeout(() => {
+      setSelectedId(null);
+      setPanelPos(null);
+    }, 250);
   }
 
   function toggleExpanded() {
@@ -319,6 +412,9 @@ export default function Internships() {
     return (
       <article
         key={program.id}
+        ref={(el) => {
+          cardRefs.current[program.id] = el;
+        }}
         className={`enterprise-card relative z-10 ${
           isSelected ? "is-selected z-30" : ""
         } ${isDimmed ? "is-dimmed" : ""}`}
@@ -363,18 +459,16 @@ export default function Internships() {
           {selectedId && !isMobile && (
             <button
               type="button"
-              className="absolute inset-0 z-20 cursor-default"
+              className="absolute inset-0 z-20 cursor-default bg-navy-950/40 backdrop-blur-[2px]"
               aria-label="Close internship details"
               onClick={closePanel}
             />
           )}
 
-          {/* Initial 4 cards */}
           <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 xl:grid-cols-4">
             {initialPrograms.map(renderCard)}
           </div>
 
-          {/* Remaining cards — expand/collapse in place */}
           {hasMore && (
             <div
               className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
@@ -396,17 +490,26 @@ export default function Internships() {
             </div>
           )}
 
-          {/* Desktop / tablet floating overlay */}
-          {selected && !isMobile && (
+          {/* Desktop / tablet — anchored to clicked card */}
+          {selected && !isMobile && panelPos && (
             <div
-              className={`absolute left-1/2 top-8 z-40 w-[min(900px,92%)] -translate-x-1/2 overflow-hidden rounded-[18px] border border-cyber-500/50 bg-[#0d1326]/95 shadow-[0_24px_60px_rgba(0,0,0,0.5)] backdrop-blur-[12px] transition-all duration-300 ease-in-out ${
+              ref={panelRef}
+              className={`absolute z-40 origin-top overflow-hidden rounded-[18px] border border-cyber-500/50 bg-[#0d1326]/95 shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-[12px] transition-all duration-[280ms] ease-in-out ${
                 visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
               }`}
+              style={{
+                top: panelPos.top,
+                left: panelPos.left,
+                width: panelPos.width,
+                maxHeight: panelPos.maxHeight,
+              }}
               role="dialog"
               aria-modal="false"
               aria-label={selected.title}
             >
-              <OverlayContent key={selected.id} program={selected} onClose={closePanel} />
+              <div className="max-h-[inherit] overflow-y-auto">
+                <OverlayContent key={selected.id} program={selected} onClose={closePanel} />
+              </div>
             </div>
           )}
         </div>
@@ -430,14 +533,14 @@ export default function Internships() {
         <div className="fixed inset-0 z-[60] sm:hidden">
           <button
             type="button"
-            className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ease-in-out ${
+            className={`absolute inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity duration-[280ms] ease-in-out ${
               visible ? "opacity-100" : "opacity-0"
             }`}
             aria-label="Close"
             onClick={closePanel}
           />
           <div
-            className={`absolute inset-x-0 bottom-0 max-h-[90vh] overflow-hidden rounded-t-[18px] border border-cyber-500/40 border-b-0 bg-[#0d1326]/98 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-[12px] transition-transform duration-300 ease-in-out ${
+            className={`absolute inset-x-0 bottom-0 max-h-[90vh] overflow-hidden rounded-t-[18px] border border-cyber-500/40 border-b-0 bg-[#0d1326]/98 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-[12px] transition-transform duration-[280ms] ease-in-out ${
               visible ? "translate-y-0" : "translate-y-full"
             }`}
             role="dialog"
