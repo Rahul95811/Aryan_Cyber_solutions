@@ -30,12 +30,12 @@ export interface ServiceDetail {
 export const cybersecurityServices: ServiceDetail[] = [
   {
     id: "vapt",
-    name: "Vulnerability Assessment & Penetration Testing (VAPT)",
+    name: "Vulnerability Assessment & Penetration Testing",
     shortName: "VAPT",
     icon: "shield-scan",
     banner: "from-blue-900/70 to-navy-800",
     cardDescription:
-      "Identify and eliminate security vulnerabilities through comprehensive web, network, API, and infrastructure penetration testing.",
+      "Find and fix vulnerabilities across web, network, API, and infrastructure through expert penetration testing.",
     overview:
       "Our VAPT engagements simulate real-world attack scenarios across web applications, networks, APIs, and infrastructure. We identify critical weaknesses before adversaries can exploit them, then deliver prioritized remediation guidance aligned with industry frameworks and your business risk profile.",
     features: [
@@ -105,7 +105,7 @@ export const cybersecurityServices: ServiceDetail[] = [
     icon: "audit",
     banner: "from-indigo-900/70 to-navy-800",
     cardDescription:
-      "Assess your organization's security posture and ensure compliance with industry standards such as ISO 27001 and regulatory frameworks.",
+      "Evaluate security controls and align your organization with ISO 27001 and industry compliance frameworks.",
     overview:
       "We evaluate policies, controls, and technical safeguards against leading standards including ISO 27001 and applicable regulatory frameworks. Our audits identify gaps, strengthen governance, and help you demonstrate compliance readiness to stakeholders and regulators.",
     features: [
@@ -175,7 +175,7 @@ export const cybersecurityServices: ServiceDetail[] = [
     icon: "awareness",
     banner: "from-cyan-900/60 to-navy-800",
     cardDescription:
-      "Deliver practical cybersecurity awareness programs that educate employees, students, and professionals to recognize cyber threats and follow secure practices.",
+      "Train employees and teams to recognize cyber threats and adopt secure practices that reduce everyday risk.",
     overview:
       "We conduct practical cybersecurity awareness programs that help employees, students, and organizations recognize cyber threats, prevent cyber attacks, and build a strong security culture through interactive sessions and real-world demonstrations.",
     highlights: ["50+ Awareness Programs Conducted", "5000+ Participants Trained"],
@@ -278,7 +278,7 @@ export const cybersecurityServices: ServiceDetail[] = [
     icon: "consulting",
     banner: "from-violet-900/60 to-navy-800",
     cardDescription:
-      "Provide strategic cybersecurity consulting to help organizations design secure architectures, reduce risks, and improve cyber resilience.",
+      "Get strategic guidance to design secure architectures, reduce risk exposure, and strengthen cyber resilience.",
     overview:
       "Our consultants partner with leadership and technical teams to design secure architectures, prioritize risks, and build resilient security programs. We translate complex threats into clear strategies that align security investments with business outcomes.",
     features: [
@@ -348,7 +348,7 @@ export const cybersecurityServices: ServiceDetail[] = [
     icon: "incident",
     banner: "from-orange-900/50 to-navy-800",
     cardDescription:
-      "Rapidly detect, investigate, contain, and recover from cyber incidents while preserving digital evidence for forensic analysis.",
+      "Detect, contain, and recover from security incidents with forensic analysis and clear remediation guidance.",
     overview:
       "When incidents occur, speed and precision matter. Our team helps detect, contain, eradicate, and recover from cyber attacks while preserving forensic evidence. We support root-cause analysis and strengthen defenses to prevent recurrence.",
     features: [
@@ -418,7 +418,7 @@ export const cybersecurityServices: ServiceDetail[] = [
     icon: "soc",
     banner: "from-emerald-900/50 to-navy-800",
     cardDescription:
-      "24×7 security monitoring, threat detection, log analysis, incident response, and continuous protection through Security Operations Center (SOC) services.",
+      "Protect your environment with continuous monitoring, threat detection, and managed SOC operations around the clock.",
     overview:
       "Our Managed Security and SOC services provide continuous monitoring, threat detection, log analysis, and coordinated incident response. We help organizations maintain around-the-clock visibility and protection without building a full in-house SOC from scratch.",
     features: [

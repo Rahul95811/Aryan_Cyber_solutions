@@ -214,7 +214,7 @@ export default function Services() {
             />
           )}
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {cybersecurityServices.map((service) => {
               const isSelected = selectedId === service.id;
               const isDimmed = selectedId !== null && !isSelected;
@@ -225,22 +225,19 @@ export default function Services() {
                   ref={(el) => {
                     cardRefs.current[service.id] = el;
                   }}
-                  className={`relative z-10 flex min-h-[280px] flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition-all duration-[250ms] ease-out ${
-                    isSelected
-                      ? "z-30 border-cyber-500/40 bg-white/[0.06]"
-                      : "hover:border-cyber-500/25 hover:bg-white/[0.05]"
-                  } ${isDimmed ? "pointer-events-none opacity-50 blur-[2px]" : "opacity-100 blur-0"}`}
+                  className={`enterprise-card relative z-10 ${
+                    isSelected ? "is-selected z-30" : ""
+                  } ${isDimmed ? "is-dimmed" : ""}`}
                 >
-                  <div className="mb-4">
+                  <div className="enterprise-card-icon">
                     <ServiceIcon type={service.icon} />
                   </div>
-                  <h3 className="card-title mb-3">{service.name}</h3>
-                  <p className="type-body mb-5 flex-1 text-white/60">{service.cardDescription}</p>
-
+                  <h3 className="enterprise-card-title">{service.name}</h3>
+                  <p className="enterprise-card-desc">{service.cardDescription}</p>
                   <button
                     type="button"
                     onClick={() => openService(service.id)}
-                    className="type-label mt-auto inline-flex items-center gap-2 font-semibold text-cyber-400 transition-colors hover:text-cyber-500"
+                    className="enterprise-card-cta"
                     aria-expanded={isSelected}
                   >
                     Learn More

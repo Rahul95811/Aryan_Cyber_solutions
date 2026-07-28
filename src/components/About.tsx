@@ -57,7 +57,11 @@ function Icon({ type }: { type: string }) {
       </svg>
     ),
   };
-  return icons[type] || icons.vapt;
+  return (
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-cyber-500/20 bg-cyber-500/10">
+      {icons[type] || icons.vapt}
+    </div>
+  );
 }
 
 const expertise = [
@@ -69,27 +73,27 @@ const expertise = [
   {
     id: "audit",
     title: "Security Audit & Compliance",
-    description: "Align your controls with ISO 27001 and industry regulatory frameworks.",
+    description: "Align controls with ISO 27001 and industry regulatory frameworks for lasting assurance.",
   },
   {
     id: "soc",
     title: "SOC Monitoring",
-    description: "Continuous threat detection and monitoring through security operations expertise.",
+    description: "Detect and monitor threats continuously with security operations center expertise.",
   },
   {
     id: "incident",
     title: "Incident Response",
-    description: "Rapid containment, investigation, and recovery when security incidents occur.",
+    description: "Contain, investigate, and recover quickly when security incidents affect your business.",
   },
   {
     id: "awareness",
     title: "Cyber Security Awareness Programs",
-    description: "Practical training that builds a security-first culture across your workforce.",
+    description: "Build a security-first culture with practical training for employees and teams.",
   },
   {
     id: "training",
     title: "Internship & Professional Training",
-    description: "Industry-aligned programs with hands-on labs and mentor-guided learning.",
+    description: "Deliver industry-aligned programs with hands-on labs and mentor-guided learning.",
   },
 ];
 
@@ -224,17 +228,14 @@ export default function About() {
           }`}
         >
           <h3 className="sub-heading mb-8 lg:mb-10">Our Expertise</h3>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {expertise.map((item) => (
-              <article
-                key={item.id}
-                className="rounded-2xl border border-white/8 bg-white/[0.02] p-6 transition-colors hover:border-white/15"
-              >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-cyber-500/10">
+              <article key={item.id} className="enterprise-card">
+                <div className="enterprise-card-icon">
                   <Icon type={item.id} />
                 </div>
-                <h4 className="card-title mb-2">{item.title}</h4>
-                <p className="type-body text-white/50">{item.description}</p>
+                <h4 className="enterprise-card-title">{item.title}</h4>
+                <p className="enterprise-card-desc mb-0">{item.description}</p>
               </article>
             ))}
           </div>

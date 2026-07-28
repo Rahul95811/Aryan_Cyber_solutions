@@ -90,7 +90,7 @@ function InternshipIcon({ type }: { type: string }) {
   };
 
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-cyber-500/15 bg-cyber-500/10">
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-cyber-500/20 bg-cyber-500/10">
       {icons[type] || icons.shield}
     </div>
   );
@@ -312,7 +312,7 @@ export default function Internships() {
             />
           )}
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {internshipPrograms.map((program) => {
               const isSelected = selectedId === program.id;
               const isDimmed = selectedId !== null && !isSelected;
@@ -320,25 +320,20 @@ export default function Internships() {
               return (
                 <article
                   key={program.id}
-                  className={`relative z-10 flex min-h-[240px] flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-[250ms] ease-out sm:p-6 ${
-                    isSelected
-                      ? "z-30 border-cyber-500/40 bg-white/[0.06]"
-                      : "hover:border-cyber-500/25 hover:bg-white/[0.05]"
-                  } ${isDimmed ? "pointer-events-none opacity-50 blur-[2px]" : "opacity-100 blur-0"}`}
+                  className={`enterprise-card relative z-10 ${
+                    isSelected ? "is-selected z-30" : ""
+                  } ${isDimmed ? "is-dimmed" : ""}`}
                 >
-                  <div className="mb-3">
+                  <div className="enterprise-card-icon">
                     <InternshipIcon type={program.icon} />
                   </div>
-                  <h3 className="card-title mb-2">{program.title}</h3>
-                  <p className="type-body mb-3 line-clamp-3 flex-1 text-white/55">
-                    {program.description}
-                  </p>
-                  <p className="type-label mb-4 text-white/40">{program.duration}</p>
-
+                  <h3 className="enterprise-card-title">{program.title}</h3>
+                  <p className="enterprise-card-desc">{program.description}</p>
+                  <p className="enterprise-card-meta">{program.duration}</p>
                   <button
                     type="button"
                     onClick={() => openProgram(program.id)}
-                    className="type-label mt-auto inline-flex items-center gap-2 font-semibold text-cyber-400 transition-colors hover:text-cyber-500"
+                    className="enterprise-card-cta"
                     aria-expanded={isSelected}
                   >
                     Learn More

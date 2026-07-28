@@ -138,6 +138,100 @@
     text-align: left;
   }
 
+  /* ——— Enterprise equal-height cards ——— */
+  .enterprise-card {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 32px;
+    transition: border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .enterprise-card:hover {
+    border-color: rgba(43, 140, 255, 0.25);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 20px rgba(43, 140, 255, 0.08);
+  }
+
+  .enterprise-card.is-selected {
+    border-color: rgba(43, 140, 255, 0.4);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .enterprise-card.is-dimmed {
+    pointer-events: none;
+    opacity: 0.5;
+    filter: blur(2px);
+  }
+
+  .enterprise-card-icon {
+    display: flex;
+    height: 48px;
+    width: 48px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .enterprise-card-title {
+    display: -webkit-box;
+    height: 2.7em; /* exactly 2 lines at 1.35 */
+    margin-bottom: 12px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 1.25rem; /* 20 mobile */
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .enterprise-card-desc {
+    display: -webkit-box;
+    height: 4.8em; /* exactly 3 lines at 1.6 */
+    margin-bottom: 24px;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1rem; /* 16 mobile */
+    font-weight: 400;
+    line-height: 1.6;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  .enterprise-card-meta {
+    height: 1.5em;
+    margin-bottom: 20px;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .enterprise-card-cta {
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #4da6ff;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    transition: color 0.2s ease;
+  }
+
+  .enterprise-card-cta:hover {
+    color: #2b8cff;
+  }
+
   /* ——— Buttons ——— */
   .btn-primary {
     @apply inline-flex h-[54px] items-center justify-center rounded-lg bg-cyber-500 px-7 text-white transition-colors duration-200 hover:bg-cyber-600 focus:outline-none focus:ring-2 focus:ring-cyber-500/50 focus:ring-offset-2 focus:ring-offset-navy-950;
@@ -198,12 +292,17 @@
   }
 
   .type-card,
-  .card-title {
+  .card-title,
+  .enterprise-card-title {
     font-size: 1.25rem; /* 20px */
   }
 
   .type-body,
   .section-subheading {
+    font-size: 1.0625rem; /* 17px */
+  }
+
+  .enterprise-card-desc {
     font-size: 1.0625rem; /* 17px */
   }
 
@@ -228,13 +327,18 @@
   }
 
   .type-card,
-  .card-title {
+  .card-title,
+  .enterprise-card-title {
     font-size: 1.375rem; /* 22px */
   }
 
   .type-body,
   .section-subheading {
     font-size: 1.125rem; /* 18px */
+  }
+
+  .enterprise-card-desc {
+    font-size: 1.0625rem; /* 17px desktop as specified */
   }
 }
 

@@ -43,7 +43,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "monitor",
     banner: "from-blue-900/60 to-navy-800",
     description:
-      "Build expertise in Security Operations Center workflows, threat detection, log analysis, and incident triage using industry-standard SIEM platforms and real-world SOC scenarios.",
+      "Learn SOC workflows, threat detection, log analysis, and alert triage with SIEM tools and real-world scenarios.",
     duration: "12 Weeks",
     certificate: "Industry-Recognized SOC Analyst Certificate",
     ...defaultMeta,
@@ -72,7 +72,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "shield",
     banner: "from-indigo-900/60 to-navy-800",
     description:
-      "Master ethical hacking methodologies, vulnerability assessment, and penetration testing frameworks through structured labs, controlled environments, and real-world attack simulations.",
+      "Practice ethical hacking, vulnerability assessment, and penetration testing through guided labs and simulations.",
     duration: "10 Weeks",
     certificate: "Penetration Testing Professional Certificate",
     ...defaultMeta,
@@ -99,7 +99,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "terminal",
     banner: "from-cyan-900/60 to-navy-800",
     description:
-      "Gain deep proficiency in the Metasploit Framework for exploitation, payload delivery, post-exploitation, and integration with professional penetration testing workflows.",
+      "Master Metasploit for exploitation, payload delivery, and professional penetration testing workflows.",
     duration: "8 Weeks",
     certificate: "Metasploit Framework Specialist Certificate",
     ...defaultMeta,
@@ -126,7 +126,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "search",
     banner: "from-purple-900/60 to-navy-800",
     description:
-      "Learn digital evidence collection, forensic analysis, chain of custody, and investigation techniques used by law enforcement and enterprise incident response teams.",
+      "Collect and analyze digital evidence using forensic methods used in enterprise investigations.",
     duration: "10 Weeks",
     certificate: "Digital Forensics Analyst Certificate",
     ...defaultMeta,
@@ -151,7 +151,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "radar",
     banner: "from-teal-900/60 to-navy-800",
     description:
-      "Develop skills in collecting, analyzing, and operationalizing threat intelligence to proactively defend organizations against advanced persistent threats and emerging attack campaigns.",
+      "Collect and apply threat intelligence to defend against emerging attacks and advanced threats.",
     duration: "8 Weeks",
     certificate: "Threat Intelligence Analyst Certificate",
     ...defaultMeta,
@@ -174,7 +174,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "chart",
     banner: "from-sky-900/60 to-navy-800",
     description:
-      "Master SIEM architecture, log management, correlation rules, and Splunk administration to detect, investigate, and respond to security events at enterprise scale.",
+      "Build SIEM and Splunk skills for log analysis, correlation, detection, and enterprise investigation.",
     duration: "10 Weeks",
     certificate: "SIEM & Splunk Specialist Certificate",
     ...defaultMeta,
@@ -197,7 +197,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "bug",
     banner: "from-red-900/50 to-navy-800",
     description:
-      "Analyze malicious software through static and dynamic techniques, reverse engineering, and sandbox analysis to understand threat behavior and develop effective countermeasures.",
+      "Analyze malware with static and dynamic techniques to understand threats and build countermeasures.",
     duration: "10 Weeks",
     certificate: "Malware Analysis Professional Certificate",
     ...defaultMeta,
@@ -220,7 +220,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "alert",
     banner: "from-orange-900/50 to-navy-800",
     description:
-      "Train in the complete incident response lifecycle — from detection and containment through eradication, recovery, and post-incident review for enterprise security teams.",
+      "Train across the full incident response lifecycle from detection and containment to recovery.",
     duration: "8 Weeks",
     certificate: "Incident Response Specialist Certificate",
     ...defaultMeta,
@@ -242,7 +242,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "cloud",
     banner: "from-blue-800/60 to-navy-800",
     description:
-      "Secure cloud environments across AWS, Azure, and GCP with identity management, configuration hardening, cloud-native security tools, and compliance frameworks.",
+      "Secure AWS, Azure, and GCP with identity controls, hardening, and cloud-native security practices.",
     duration: "10 Weeks",
     certificate: "Cloud Security Professional Certificate",
     ...defaultMeta,
@@ -265,7 +265,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "network",
     banner: "from-emerald-900/50 to-navy-800",
     description:
-      "Design and implement enterprise network security with firewalls, IDS/IPS, segmentation, VPNs, and network monitoring to protect critical infrastructure from threats.",
+      "Design network defenses with firewalls, IDS/IPS, segmentation, VPNs, and continuous monitoring.",
     duration: "10 Weeks",
     certificate: "Network Security Specialist Certificate",
     ...defaultMeta,
@@ -287,7 +287,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "globe",
     banner: "from-violet-900/50 to-navy-800",
     description:
-      "Identify and remediate web application vulnerabilities using OWASP standards, secure development practices, and hands-on testing with industry-standard tools.",
+      "Find and fix web application vulnerabilities using OWASP methods and industry-standard tools.",
     duration: "8 Weeks",
     certificate: "Web Application Security Certificate",
     ...defaultMeta,
@@ -309,7 +309,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "scan",
     banner: "from-amber-900/40 to-navy-800",
     description:
-      "Conduct systematic vulnerability assessments using automated scanning tools, manual validation, risk scoring, and remediation planning for enterprise environments.",
+      "Run structured vulnerability assessments with scanning, validation, scoring, and remediation planning.",
     duration: "8 Weeks",
     certificate: "Vulnerability Assessment Professional Certificate",
     ...defaultMeta,
@@ -331,7 +331,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "compliance",
     banner: "from-slate-800/80 to-navy-800",
     description:
-      "Understand governance, risk, and compliance frameworks with hands-on ISO 27001 implementation, audit preparation, policy development, and risk management processes.",
+      "Learn GRC with ISO 27001, audit readiness, policy development, and practical risk management.",
     duration: "10 Weeks",
     certificate: "GRC & ISO 27001 Foundation Certificate",
     ...defaultMeta,
@@ -353,7 +353,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "code",
     banner: "from-green-900/40 to-navy-800",
     description:
-      "Build security automation tools, scanners, log parsers, and threat detection scripts using Python libraries essential for modern cybersecurity professionals.",
+      "Build security automation, scanners, and detection scripts with Python for modern cyber roles.",
     duration: "8 Weeks",
     certificate: "Python for Cybersecurity Certificate",
     ...defaultMeta,
@@ -375,7 +375,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "ai",
     banner: "from-fuchsia-900/40 to-navy-800",
     description:
-      "Explore the intersection of artificial intelligence and cybersecurity — ML-based threat detection, adversarial AI, automated analysis, and AI-powered security tools.",
+      "Explore AI-driven threat detection, adversarial risks, and automated security analysis tools.",
     duration: "10 Weeks",
     certificate: "AI in Cybersecurity Certificate",
     ...defaultMeta,
@@ -397,7 +397,7 @@ const allPrograms: InternshipProgram[] = [
     icon: "chip",
     banner: "from-cyan-800/50 to-navy-800",
     description:
-      "Secure IoT ecosystems through device hardening, protocol analysis, firmware assessment, and network segmentation strategies for connected infrastructure.",
+      "Secure IoT systems with device hardening, protocol analysis, firmware review, and segmentation.",
     duration: "8 Weeks",
     certificate: "IoT Security Specialist Certificate",
     ...defaultMeta,
