@@ -248,7 +248,14 @@ export default function Internships() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const sectionRootRef = useRef<HTMLElement>(null);
+
+  const INITIAL_COUNT = 4;
+  const initialPrograms = internshipPrograms.slice(0, INITIAL_COUNT);
+  const extraPrograms = internshipPrograms.slice(INITIAL_COUNT);
+  const hasMore = extraPrograms.length > 0;
 
   const selected = internshipPrograms.find((p) => p.id === selectedId) || null;
 
@@ -290,8 +297,59 @@ export default function Internships() {
     setTimeout(() => setSelectedId(null), 220);
   }
 
+  function toggleExpanded() {
+    if (expanded) {
+      const selectedIsExtra = extraPrograms.some((p) => p.id === selectedId);
+      if (selectedIsExtra) {
+        closePanel();
+      }
+      setExpanded(false);
+      requestAnimationFrame(() => {
+        sectionRootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    } else {
+      setExpanded(true);
+    }
+  }
+
+  function renderCard(program: (typeof internshipPrograms)[0]) {
+    const isSelected = selectedId === program.id;
+    const isDimmed = selectedId !== null && !isSelected;
+
+    return (
+      <article
+        key={program.id}
+        className={`enterprise-card relative z-10 ${
+          isSelected ? "is-selected z-30" : ""
+        } ${isDimmed ? "is-dimmed" : ""}`}
+      >
+        <div className="enterprise-card-icon">
+          <InternshipIcon type={program.icon} />
+        </div>
+        <h3 className="enterprise-card-title">{program.title}</h3>
+        <p className="enterprise-card-desc">{program.description}</p>
+        <p className="enterprise-card-meta">{program.duration}</p>
+        <button
+          type="button"
+          onClick={() => openProgram(program.id)}
+          className="enterprise-card-cta"
+          aria-expanded={isSelected}
+        >
+          Learn More
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </article>
+    );
+  }
+
   return (
-    <section id="internships" className="section-padding bg-navy-900/30">
+    <section
+      id="internships"
+      ref={sectionRootRef}
+      className="section-padding scroll-mt-20 bg-navy-900/30"
+    >
       <div className="container-main">
         <div className="section-header">
           <h2 className="section-heading">Cybersecurity Internship Programs</h2>
@@ -302,7 +360,6 @@ export default function Internships() {
         </div>
 
         <div ref={sectionRef} className="relative">
-          {/* Desktop click-away backdrop */}
           {selectedId && !isMobile && (
             <button
               type="button"
@@ -312,44 +369,37 @@ export default function Internships() {
             />
           )}
 
-          <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {internshipPrograms.map((program) => {
-              const isSelected = selectedId === program.id;
-              const isDimmed = selectedId !== null && !isSelected;
-
-              return (
-                <article
-                  key={program.id}
-                  className={`enterprise-card relative z-10 ${
-                    isSelected ? "is-selected z-30" : ""
-                  } ${isDimmed ? "is-dimmed" : ""}`}
-                >
-                  <div className="enterprise-card-icon">
-                    <InternshipIcon type={program.icon} />
-                  </div>
-                  <h3 className="enterprise-card-title">{program.title}</h3>
-                  <p className="enterprise-card-desc">{program.description}</p>
-                  <p className="enterprise-card-meta">{program.duration}</p>
-                  <button
-                    type="button"
-                    onClick={() => openProgram(program.id)}
-                    className="enterprise-card-cta"
-                    aria-expanded={isSelected}
-                  >
-                    Learn More
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </article>
-              );
-            })}
+          {/* Initial 4 cards */}
+          <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            {initialPrograms.map(renderCard)}
           </div>
 
-          {/* Desktop / tablet centered floating overlay */}
+          {/* Remaining cards — expand/collapse in place */}
+          {hasMore && (
+            <div
+              className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+              }`}
+              aria-hidden={!expanded}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <div
+                  className={`mt-6 grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 xl:grid-cols-4 transition-all duration-300 ease-in-out ${
+                    expanded
+                      ? "translate-y-0 opacity-100"
+                      : "pointer-events-none translate-y-3 opacity-0"
+                  }`}
+                >
+                  {extraPrograms.map(renderCard)}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Desktop / tablet floating overlay */}
           {selected && !isMobile && (
             <div
-              className={`absolute left-1/2 top-8 z-40 w-[min(900px,92%)] -translate-x-1/2 overflow-hidden rounded-[18px] border border-cyber-500/50 bg-[#0d1326]/95 shadow-[0_24px_60px_rgba(0,0,0,0.5)] backdrop-blur-[12px] transition-all duration-[250ms] ease-out ${
+              className={`absolute left-1/2 top-8 z-40 w-[min(900px,92%)] -translate-x-1/2 overflow-hidden rounded-[18px] border border-cyber-500/50 bg-[#0d1326]/95 shadow-[0_24px_60px_rgba(0,0,0,0.5)] backdrop-blur-[12px] transition-all duration-300 ease-in-out ${
                 visible ? "scale-100 opacity-100" : "scale-95 opacity-0"
               }`}
               role="dialog"
@@ -360,6 +410,19 @@ export default function Internships() {
             </div>
           )}
         </div>
+
+        {hasMore && (
+          <div className="mt-10 flex justify-center">
+            <button
+              type="button"
+              onClick={toggleExpanded}
+              className="btn-secondary"
+              aria-expanded={expanded}
+            >
+              {expanded ? "Show Less" : "View More Internships"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Mobile bottom sheet */}
@@ -367,14 +430,14 @@ export default function Internships() {
         <div className="fixed inset-0 z-[60] sm:hidden">
           <button
             type="button"
-            className={`absolute inset-0 bg-black/60 transition-opacity duration-[250ms] ${
+            className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ease-in-out ${
               visible ? "opacity-100" : "opacity-0"
             }`}
             aria-label="Close"
             onClick={closePanel}
           />
           <div
-            className={`absolute inset-x-0 bottom-0 max-h-[90vh] overflow-hidden rounded-t-[18px] border border-cyber-500/40 border-b-0 bg-[#0d1326]/98 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-[12px] transition-transform duration-[250ms] ease-out ${
+            className={`absolute inset-x-0 bottom-0 max-h-[90vh] overflow-hidden rounded-t-[18px] border border-cyber-500/40 border-b-0 bg-[#0d1326]/98 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-[12px] transition-transform duration-300 ease-in-out ${
               visible ? "translate-y-0" : "translate-y-full"
             }`}
             role="dialog"
