@@ -194,7 +194,7 @@ export default function Services() {
   return (
     <section id="services" className="section-padding">
       <div className="container-main">
-        <div className="mb-12 max-w-3xl">
+        <div className="section-header">
           <h2 className="section-heading">Our Cybersecurity Services</h2>
           <p className="section-subheading">
             We provide end-to-end cybersecurity solutions that help organizations protect their

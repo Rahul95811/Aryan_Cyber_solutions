@@ -293,7 +293,7 @@ export default function Internships() {
   return (
     <section id="internships" className="section-padding bg-navy-900/30">
       <div className="container-main">
-        <div className="mb-10 max-w-2xl">
+        <div className="section-header">
           <h2 className="section-heading">Cybersecurity Internship Programs</h2>
           <p className="section-subheading">
             Explore our full catalog of industry-aligned internship programs.
@@ -320,7 +320,7 @@ export default function Internships() {
               return (
                 <article
                   key={program.id}
-                  className={`relative z-10 flex min-h-[240px] flex-col rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-[250ms] ease-out ${
+                  className={`relative z-10 flex min-h-[240px] flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-all duration-[250ms] ease-out sm:p-6 ${
                     isSelected
                       ? "z-30 border-cyber-500/40 bg-white/[0.06]"
                       : "hover:border-cyber-500/25 hover:bg-white/[0.05]"

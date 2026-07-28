@@ -107,7 +107,7 @@ export default function Contact() {
   return (
     <section id="contact" className="section-padding bg-navy-900/50">
       <div className="container-main">
-        <div className="mb-12 max-w-2xl">
+        <div className="section-header">
           <h2 className="section-heading">Contact Us</h2>
           <p className="section-subheading">
             Ready to strengthen your security posture or join our internship programs?
@@ -190,7 +190,7 @@ export default function Contact() {
             </div>
           </div>
 
-          <div className="glass-card p-8">
+          <div className="glass-card p-6 sm:p-8">
             <div className="mb-6 flex rounded-lg border border-white/10 p-1">
               <button
                 type="button"

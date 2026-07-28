@@ -51,7 +51,7 @@ export default function Projects() {
   return (
     <section id="projects" className="section-padding bg-navy-900/50">
       <div className="container-main">
-        <div className="mb-12 max-w-2xl">
+        <div className="section-header">
           <h2 className="section-heading">Featured Projects</h2>
           <p className="section-subheading">
             Innovative security solutions built by our team to address real-world
@@ -65,7 +65,7 @@ export default function Projects() {
               <div className="relative aspect-video overflow-hidden bg-navy-800">
                 <ProjectImage project={project} />
               </div>
-              <div className="p-6">
+              <div className="p-6 lg:p-7">
                 <p className="type-label mb-2 text-cyber-400">{project.tagline}</p>
                 <h3 className="card-title mb-3">{project.name}</h3>
                 <p className="type-body mb-5 text-white/60">{project.description}</p>

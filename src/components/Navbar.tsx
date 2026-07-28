@@ -40,7 +40,7 @@ export default function Navbar() {
             className="rounded"
             priority
           />
-          <span className="type-label hidden font-semibold tracking-tight text-white sm:block">
+          <span className="type-nav hidden font-semibold tracking-tight text-white sm:block">
             Aryan Cyber Solutions
           </span>
         </Link>

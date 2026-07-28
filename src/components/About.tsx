@@ -171,7 +171,7 @@ function WorkflowCard({
           <WorkflowIcon type={step.icon} />
         </span>
       </div>
-      <h4 className="type-label mb-1.5 font-semibold text-white">{step.title}</h4>
+      <h4 className="card-title mb-1.5">{step.title}</h4>
       <p className="type-label leading-snug text-white/50">{step.description}</p>
     </article>
   );
@@ -186,15 +186,15 @@ export default function About() {
   return (
     <section id="about" className="section-padding bg-navy-900/35">
       <div className="container-main">
-        {/* Intro */}
+        {/* Intro — left-aligned content */}
         <div
           ref={intro.ref}
-          className={`mx-auto mb-16 max-w-3xl text-center transition-all duration-700 ${
+          className={`section-header mb-16 transition-all duration-700 ${
             intro.visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
         >
           <h2 className="section-heading">About Aryan Cyber Solutions</h2>
-          <p className="type-body mx-auto max-w-prose text-white/55">
+          <p className="type-body prose-width text-white/55">
             We help organizations strengthen their cybersecurity through consulting, VAPT,
             SOC services, awareness programs, and industry-focused internship training.
           </p>
@@ -203,12 +203,12 @@ export default function About() {
         {/* Who We Are */}
         <div
           ref={who.ref}
-          className={`mx-auto mb-20 max-w-3xl transition-all duration-700 ${
+          className={`mb-20 transition-all duration-700 ${
             who.visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
         >
-          <h3 className="sub-heading mb-5 text-center">Who We Are</h3>
-          <p className="type-body mx-auto max-w-prose text-center text-white/55">
+          <h3 className="sub-heading mb-5">Who We Are</h3>
+          <p className="type-body prose-width text-white/55">
             Aryan Cyber Solutions is an enterprise cybersecurity company based in Visakhapatnam,
             India. We deliver practical security solutions that combine consulting expertise with
             hands-on training—helping organizations protect critical assets while building internal
@@ -223,12 +223,12 @@ export default function About() {
             expertiseRef.visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
         >
-          <h3 className="sub-heading mb-10 text-center">Our Expertise</h3>
+          <h3 className="sub-heading mb-8 lg:mb-10">Our Expertise</h3>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {expertise.map((item) => (
               <article
                 key={item.id}
-                className="rounded-xl border border-white/8 bg-white/[0.02] p-6 transition-colors hover:border-white/15"
+                className="rounded-2xl border border-white/8 bg-white/[0.02] p-6 transition-colors hover:border-white/15"
               >
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-cyber-500/10">
                   <Icon type={item.id} />
@@ -247,7 +247,7 @@ export default function About() {
             workflowRef.visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
         >
-          <h3 className="sub-heading mb-8 text-center lg:mb-10">Our Workflow</h3>
+          <h3 className="sub-heading mb-8 lg:mb-10">Our Workflow</h3>
 
           {/* Mobile / tablet: compact 2×2 grid, last card centered — no timeline */}
           <ol className="grid grid-cols-2 gap-3 sm:gap-4 lg:hidden">

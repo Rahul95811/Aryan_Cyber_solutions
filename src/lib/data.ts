@@ -101,7 +101,7 @@ export const serviceOptions = [
 
 export const companyInfo = {
   email: "sriaryan.dev@gmail.com",
-  phone: "+91 98765 43210",
+  phone: "+91 98850 96787",
   location: "Visakhapatnam, India",
   linkedin: "https://linkedin.com/company/aryan-cyber-solutions",
 };

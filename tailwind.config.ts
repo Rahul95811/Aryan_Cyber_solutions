@@ -27,23 +27,21 @@ const config: Config = {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
       fontSize: {
-        /* Typography System — use these only */
-        hero: ["2.25rem", { lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700" }],
-        section: ["1.875rem", { lineHeight: "1.2", letterSpacing: "-0.015em", fontWeight: "700" }],
-        sub: ["1.375rem", { lineHeight: "1.3", fontWeight: "600" }],
-        card: ["1.25rem", { lineHeight: "1.35", fontWeight: "600" }],
-        body: ["1rem", { lineHeight: "1.7", fontWeight: "400" }],
+        hero: ["4rem", { lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700" }],
+        section: ["2.5rem", { lineHeight: "1.2", letterSpacing: "-0.015em", fontWeight: "700" }],
+        sub: ["1.75rem", { lineHeight: "1.3", fontWeight: "600" }],
+        card: ["1.375rem", { lineHeight: "1.35", fontWeight: "600" }],
+        body: ["1.125rem", { lineHeight: "1.7", fontWeight: "400" }],
         label: ["1rem", { lineHeight: "1.5", fontWeight: "500" }],
-        small: ["1rem", { lineHeight: "1.5", fontWeight: "400" }],
-        nav: ["1.0625rem", { lineHeight: "1.4", fontWeight: "500" }],
+        nav: ["1rem", { lineHeight: "1.4", fontWeight: "500" }],
         btn: ["1.0625rem", { lineHeight: "1.2", fontWeight: "600" }],
-        stat: ["2.125rem", { lineHeight: "1.1", fontWeight: "700" }],
+        stat: ["2.5rem", { lineHeight: "1.1", fontWeight: "700" }],
       },
       spacing: {
-        section: "5rem",
+        section: "6rem",
       },
       maxWidth: {
-        prose: "800px",
+        prose: "700px",
       },
       boxShadow: {
         glass: "0 8px 32px rgba(0, 0, 0, 0.3)",

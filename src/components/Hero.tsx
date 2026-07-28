@@ -13,8 +13,8 @@ export default function Hero() {
       >
         <HeroBackground />
 
-        <div className="container-main relative z-10 flex w-full flex-col items-center px-6 pb-16 pt-28 text-center lg:pb-20 lg:pt-24">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1">
+        <div className="container-main relative z-10 flex w-full flex-col items-center px-5 pb-16 pt-28 text-center sm:px-6 lg:pb-20 lg:pt-24">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-green-400" aria-hidden="true" />
             <span className="type-label uppercase tracking-[0.12em] text-white/55">
               SOC Operations Active
