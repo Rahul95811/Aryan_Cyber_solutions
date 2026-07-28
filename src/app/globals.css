@@ -1,0 +1,270 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-navy-950 text-white antialiased;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  ::selection {
+    @apply bg-cyber-500/30 text-white;
+  }
+}
+
+@layer components {
+  .section-padding {
+    @apply py-section;
+  }
+
+  .container-main {
+    @apply mx-auto w-full max-w-7xl px-6 lg:px-8;
+  }
+
+  .glass-card {
+    @apply rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:border-cyber-500/30 hover:bg-white/[0.06] hover:shadow-glow-sm;
+  }
+
+  /* ——— Typography System ——— */
+  .type-hero {
+    color: #fff;
+    font-size: 2.25rem; /* 36px */
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .type-section {
+    color: #fff;
+    font-size: 1.875rem; /* 30px */
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+
+  .type-sub {
+    color: #fff;
+    font-size: 1.375rem; /* 22px */
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .type-card {
+    color: #fff;
+    font-size: 1.25rem; /* 20px */
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .type-body {
+    font-size: 1rem; /* 16px */
+    font-weight: 400;
+    line-height: 1.7;
+  }
+
+  .type-label {
+    font-size: 1rem; /* 16px */
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .type-stat {
+    color: #fff;
+    font-size: 2.125rem; /* 34px */
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .type-nav {
+    font-size: 1.0625rem; /* 17px */
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .section-heading {
+    margin-bottom: 1.25rem;
+    color: #fff;
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+  }
+
+  .section-subheading {
+    max-width: 800px;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .sub-heading {
+    color: #fff;
+    font-size: 1.375rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .card-title {
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  /* ——— Buttons ——— */
+  .btn-primary {
+    @apply inline-flex h-[54px] items-center justify-center rounded-lg bg-cyber-500 px-7 text-white transition-colors duration-200 hover:bg-cyber-600 focus:outline-none focus:ring-2 focus:ring-cyber-500/50 focus:ring-offset-2 focus:ring-offset-navy-950;
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+
+  .btn-secondary {
+    @apply inline-flex h-[54px] items-center justify-center rounded-lg border border-white/20 bg-transparent px-7 text-white transition-colors duration-200 hover:border-white/35 hover:bg-white/[0.05] focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-navy-950;
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+
+  .btn-hero-primary {
+    @apply btn-primary;
+  }
+
+  .btn-hero-secondary {
+    @apply btn-secondary;
+  }
+
+  .btn-sm {
+    @apply inline-flex h-11 items-center justify-center rounded-lg px-5 transition-colors;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .animate-fade-in,
+  .animate-slide-up {
+    opacity: 0;
+  }
+
+  .hero-grid {
+    opacity: 0.5;
+    background-image:
+      linear-gradient(rgba(147, 197, 253, 0.9) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(147, 197, 253, 0.9) 1px, transparent 1px);
+    background-size: 64px 64px;
+    animation: heroGridDrift 90s linear infinite;
+  }
+}
+
+@media (min-width: 768px) {
+  .type-hero {
+    font-size: 3rem; /* 48px */
+  }
+
+  .type-section,
+  .section-heading {
+    font-size: 2.25rem; /* 36px */
+  }
+
+  .type-sub,
+  .sub-heading {
+    font-size: 1.5rem; /* 24px */
+  }
+
+  .type-card,
+  .card-title {
+    font-size: 1.25rem; /* 20px */
+  }
+
+  .type-body,
+  .section-subheading {
+    font-size: 1.0625rem; /* 17px */
+  }
+
+  .type-stat {
+    font-size: 2.5rem; /* 40px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .type-hero {
+    font-size: 4rem; /* 64px */
+  }
+
+  .type-section,
+  .section-heading {
+    font-size: 2.625rem; /* 42px */
+  }
+
+  .type-sub,
+  .sub-heading {
+    font-size: 1.75rem; /* 28px */
+  }
+
+  .type-card,
+  .card-title {
+    font-size: 1.375rem; /* 22px */
+  }
+
+  .type-body,
+  .section-subheading {
+    font-size: 1.125rem; /* 18px */
+  }
+}
+
+@keyframes heroGridDrift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 64px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .hero-grid {
+    animation: none !important;
+  }
+
+  .animate-fade-in,
+  .animate-slide-up {
+    opacity: 1 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-grid {
+    animation-duration: 140s;
+    opacity: 0.045;
+  }
+}
