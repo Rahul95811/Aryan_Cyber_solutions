@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useEffect, useRef, useState, FormEvent } from "react";
 import { companyInfo } from "@/lib/data";
-import { internshipPrograms } from "@/lib/internships";
 
 type Tab = "contact" | "internship";
 
@@ -13,16 +12,25 @@ interface FormState {
 
 const initialFormState: FormState = { status: "idle", message: "" };
 
-const degreeOptions = [
-  "B.Tech",
-  "B.E",
-  "B.Sc",
-  "M.Tech",
-  "M.Sc",
-  "MCA",
-  "MBA",
-  "Diploma",
-  "Other",
+const internshipOptions = [
+  "SOC Analyst Internship",
+  "Penetration Testing Internship",
+  "Metasploit Framework Internship",
+  "Web Application Security Internship",
+  "Network Security Internship",
+  "Cloud Security Internship",
+  "Digital Forensics Internship",
+  "Threat Intelligence Internship",
+  "Malware Analysis Internship",
+  "SIEM & Splunk Internship",
+  "Incident Response Internship",
+  "Vulnerability Assessment Internship",
+  "Governance, Risk & Compliance (GRC) Internship",
+  "Python for Cyber Security Internship",
+  "Linux for Cyber Security Internship",
+  "AI Security Internship",
+  "IoT Security Internship",
+  "Cyber Security Awareness Internship",
 ];
 
 const inputClass =
@@ -32,15 +40,26 @@ export default function Contact() {
   const [tab, setTab] = useState<Tab>("contact");
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedInternship, setSelectedInternship] = useState("");
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrors({});
+
+    if (tab === "internship" && !selectedInternship) {
+      setErrors({ internship: "Please select an internship program." });
+      setFormState({ status: "error", message: "Please fix the highlighted fields." });
+      return;
+    }
+
     setFormState({ status: "loading", message: "" });
 
     const form = e.currentTarget;
     const formData = new FormData(form);
     formData.set("type", tab);
+    if (tab === "internship") {
+      formData.set("internship", selectedInternship);
+    }
 
     try {
       const res = await fetch("/api/contact", {
@@ -69,6 +88,7 @@ export default function Contact() {
             : "Your internship application has been received. Please allow 3–5 business days for review.",
       });
       form.reset();
+      setSelectedInternship("");
     } catch {
       setFormState({
         status: "error",
@@ -81,6 +101,7 @@ export default function Contact() {
     setTab(next);
     setFormState(initialFormState);
     setErrors({});
+    setSelectedInternship("");
   }
 
   return (
@@ -226,55 +247,20 @@ export default function Contact() {
                     <Field label="Phone Number" name="phone" type="tel" error={errors.phone} required />
                     <Field label="College" name="college" error={errors.college} required />
 
-                    <div>
-                      <label htmlFor="degree" className="type-label mb-2 block font-medium text-white/80">
-                        Degree
-                      </label>
-                      <select
-                        id="degree"
-                        name="degree"
-                        required
-                        className={`${inputClass} bg-navy-900`}
-                        defaultValue=""
-                        suppressHydrationWarning
-                      >
-                        <option value="" disabled>
-                          Select degree
-                        </option>
-                        {degreeOptions.map((d) => (
-                          <option key={d} value={d}>
-                            {d}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.degree && <p className="type-label mt-1 text-red-400">{errors.degree}</p>}
-                    </div>
-
-                    <div>
-                      <label htmlFor="internship" className="type-label mb-2 block font-medium text-white/80">
-                        Selected Internship
-                      </label>
-                      <select
-                        id="internship"
-                        name="internship"
-                        required
-                        className={`${inputClass} bg-navy-900`}
-                        defaultValue=""
-                        suppressHydrationWarning
-                      >
-                        <option value="" disabled>
-                          Select internship program
-                        </option>
-                        {internshipPrograms.map((p) => (
-                          <option key={p.id} value={p.title}>
-                            {p.title}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.internship && (
-                        <p className="type-label mt-1 text-red-400">{errors.internship}</p>
-                      )}
-                    </div>
+                    <InternshipSelect
+                      value={selectedInternship}
+                      error={errors.internship}
+                      onChange={(value) => {
+                        setSelectedInternship(value);
+                        if (errors.internship) {
+                          setErrors((prev) => {
+                            const next = { ...prev };
+                            delete next.internship;
+                            return next;
+                          });
+                        }
+                      }}
+                    />
 
                     <Field label="Message" name="message" error={errors.message} required textarea />
 
@@ -314,6 +300,109 @@ export default function Contact() {
         </div>
       </div>
     </section>
+  );
+}
+
+function InternshipSelect({
+  value,
+  onChange,
+  error,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listId = "internship-options";
+
+  useEffect(() => {
+    function onPointerDown(e: MouseEvent) {
+      if (!rootRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <label htmlFor="internship-trigger" className="type-label mb-2 block font-medium text-white/80">
+        Selected Internship
+      </label>
+      <input type="hidden" name="internship" value={value} />
+      <button
+        id="internship-trigger"
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listId}
+        onClick={() => setOpen((v) => !v)}
+        className={`${inputClass} flex items-center justify-between gap-3 text-left transition-all duration-200 ${
+          open ? "border-cyber-500/50" : ""
+        } ${error ? "border-red-400/50" : ""}`}
+      >
+        <span className={value ? "text-white" : "text-white/40"}>
+          {value || "Select Internship Program"}
+        </span>
+        <svg
+          className={`h-4 w-4 shrink-0 text-white/50 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <div
+        className={`absolute left-0 right-0 z-30 mt-2 origin-top overflow-hidden rounded-lg border border-white/10 bg-[#0d1326] shadow-[0_16px_40px_rgba(0,0,0,0.45)] transition-all duration-200 ${
+          open
+            ? "pointer-events-auto scale-100 opacity-100"
+            : "pointer-events-none scale-95 opacity-0"
+        }`}
+      >
+        <ul
+          id={listId}
+          role="listbox"
+          aria-label="Internship programs"
+          className="max-h-60 overflow-y-auto py-1"
+        >
+          {internshipOptions.map((option) => {
+            const selected = value === option;
+            return (
+              <li key={option} role="option" aria-selected={selected}>
+                <button
+                  type="button"
+                  className={`type-label w-full px-4 py-2.5 text-left transition-colors duration-150 ${
+                    selected
+                      ? "bg-cyber-500/20 text-white"
+                      : "text-white/80 hover:bg-white/[0.06] hover:text-white"
+                  }`}
+                  onClick={() => {
+                    onChange(option);
+                    setOpen(false);
+                  }}
+                >
+                  {option}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {error && <p className="type-label mt-1 text-red-400">{error}</p>}
+    </div>
   );
 }
 

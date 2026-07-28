@@ -94,12 +94,88 @@ const expertise = [
 ];
 
 const workflow = [
-  "Consultation",
-  "Assessment",
-  "Planning",
-  "Implementation",
-  "Support",
+  {
+    title: "Consultation",
+    description: "Understanding business requirements",
+    icon: "consultation",
+  },
+  {
+    title: "Assessment",
+    description: "Identify risks and security gaps",
+    icon: "assessment",
+  },
+  {
+    title: "Planning",
+    description: "Design the security strategy",
+    icon: "planning",
+  },
+  {
+    title: "Implementation",
+    description: "Deploy security solutions",
+    icon: "implementation",
+  },
+  {
+    title: "Support",
+    description: "Continuous monitoring and improvement",
+    icon: "support",
+  },
 ];
+
+function WorkflowIcon({ type }: { type: string }) {
+  const cls = "h-5 w-5 text-cyber-400";
+  const icons: Record<string, React.ReactNode> = {
+    consultation: (
+      <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+    ),
+    assessment: (
+      <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    ),
+    planning: (
+      <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg>
+    ),
+    implementation: (
+      <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 01-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+    support: (
+      <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
+  };
+  return icons[type] || icons.consultation;
+}
+
+function WorkflowCard({
+  step,
+  index,
+}: {
+  step: (typeof workflow)[0];
+  index: number;
+}) {
+  return (
+    <article className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-cyber-500/25 hover:bg-white/[0.05]">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyber-500 text-[13px] font-semibold text-white">
+          {index + 1}
+        </span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-cyber-500/10">
+          <WorkflowIcon type={step.icon} />
+        </span>
+      </div>
+      <h4 className="type-label mb-1.5 font-semibold text-white">{step.title}</h4>
+      <p className="type-label leading-snug text-white/50">{step.description}</p>
+    </article>
+  );
+}
 
 export default function About() {
   const intro = useInView();
@@ -171,28 +247,41 @@ export default function About() {
             workflowRef.visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
           }`}
         >
-          <h3 className="sub-heading mb-10 text-center">Our Workflow</h3>
-          <div className="relative mx-auto max-w-5xl">
-            <div
-              className="absolute left-0 right-0 top-3 hidden h-px bg-white/10 lg:block"
-              aria-hidden="true"
-            />
-            <ol className="grid gap-8 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
-              {workflow.map((step, index) => (
-                <li key={step} className="relative flex flex-col items-center text-center">
-                  <div className="type-label relative z-10 mb-4 flex h-7 w-7 items-center justify-center rounded-full border-2 border-cyber-400/50 bg-navy-950 font-semibold text-cyber-400">
-                    {index + 1}
+          <h3 className="sub-heading mb-8 text-center lg:mb-10">Our Workflow</h3>
+
+          {/* Mobile / tablet: compact 2×2 grid, last card centered — no timeline */}
+          <ol className="grid grid-cols-2 gap-3 sm:gap-4 lg:hidden">
+            {workflow.map((step, index) => (
+              <li
+                key={step.title}
+                className={
+                  index === workflow.length - 1
+                    ? "col-span-2 mx-auto w-[calc(50%-0.375rem)] sm:w-[calc(50%-0.5rem)]"
+                    : undefined
+                }
+              >
+                <WorkflowCard step={step} index={index} />
+              </li>
+            ))}
+          </ol>
+
+          {/* Desktop: horizontal connected workflow cards */}
+          <ol className="hidden items-stretch lg:grid lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr_auto_1fr] lg:gap-x-3">
+            {workflow.map((step, index) => (
+              <li key={step.title} className="contents">
+                <div className="min-w-0">
+                  <WorkflowCard step={step} index={index} />
+                </div>
+                {index < workflow.length - 1 && (
+                  <div className="flex items-center justify-center px-0.5" aria-hidden="true">
+                    <svg className="h-4 w-4 text-cyber-400/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
-                  <span className="type-label text-white/75">{step}</span>
-                  {index < workflow.length - 1 && (
-                    <span className="mt-3 text-white/25 lg:hidden" aria-hidden="true">
-                      ↓
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </div>
+                )}
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </section>

@@ -59,8 +59,7 @@ const internshipSchema = z.object({
   email: z.string().email("Valid email is required"),
   phone: z.string().min(7, "Phone number is required"),
   college: z.string().min(2, "College is required"),
-  degree: z.string().min(1, "Degree is required"),
-  internship: z.string().min(1, "Please select an internship"),
+  internship: z.string().min(1, "Please select an internship program."),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
 
@@ -193,7 +192,6 @@ export async function POST(request: NextRequest) {
         email: String(formData.get("email") || ""),
         phone: String(formData.get("phone") || ""),
         college: String(formData.get("college") || ""),
-        degree: String(formData.get("degree") || ""),
         internship: String(formData.get("internship") || ""),
         message: String(formData.get("message") || formData.get("whyJoin") || ""),
       };
@@ -206,7 +204,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const { fullName, email, phone, college, degree, internship, message } = result.data;
+      const { fullName, email, phone, college, internship, message } = result.data;
       const resumeBuffer = Buffer.from(await resume.arrayBuffer());
       const resumeFilename = resume.name.toLowerCase().endsWith(".pdf")
         ? resume.name
@@ -223,7 +221,6 @@ export async function POST(request: NextRequest) {
           <p><strong>Email:</strong> ${escapeHtml(email)}</p>
           <p><strong>Phone Number:</strong> ${escapeHtml(phone)}</p>
           <p><strong>College:</strong> ${escapeHtml(college)}</p>
-          <p><strong>Degree:</strong> ${escapeHtml(degree)}</p>
           <p><strong>Selected Internship:</strong> ${escapeHtml(internship)}</p>
           <p><strong>Message:</strong></p>
           <p>${escapeHtml(message).replace(/\n/g, "<br>")}</p>
