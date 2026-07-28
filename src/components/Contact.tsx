@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { companyInfo, serviceOptions } from "@/lib/data";
+import { companyInfo } from "@/lib/data";
+import { internshipPrograms } from "@/lib/internships";
 
-type Tab = "consultancy" | "internship";
+type Tab = "contact" | "internship";
 
 interface FormState {
   status: "idle" | "loading" | "success" | "error";
@@ -12,8 +13,23 @@ interface FormState {
 
 const initialFormState: FormState = { status: "idle", message: "" };
 
+const degreeOptions = [
+  "B.Tech",
+  "B.E",
+  "B.Sc",
+  "M.Tech",
+  "M.Sc",
+  "MCA",
+  "MBA",
+  "Diploma",
+  "Other",
+];
+
+const inputClass =
+  "type-body w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition-colors focus:border-cyber-500/50";
+
 export default function Contact() {
-  const [tab, setTab] = useState<Tab>("consultancy");
+  const [tab, setTab] = useState<Tab>("contact");
   const [formState, setFormState] = useState<FormState>(initialFormState);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -48,9 +64,9 @@ export default function Contact() {
       setFormState({
         status: "success",
         message:
-          tab === "consultancy"
-            ? "Thank you for reaching out. Our security team will contact you within 24 hours."
-            : "Your internship application has been received. We will review your profile and respond shortly.",
+          tab === "contact"
+            ? "Thank you for reaching out. We have received your message and will respond shortly."
+            : "Your internship application has been received. Please allow 3–5 business days for review.",
       });
       form.reset();
     } catch {
@@ -59,6 +75,12 @@ export default function Contact() {
         message: "Network error. Please check your connection and try again.",
       });
     }
+  }
+
+  function switchTab(next: Tab) {
+    setTab(next);
+    setFormState(initialFormState);
+    setErrors({});
   }
 
   return (
@@ -152,30 +174,18 @@ export default function Contact() {
               <button
                 type="button"
                 className={`type-label flex-1 rounded-md py-2.5 font-semibold transition-all ${
-                  tab === "consultancy"
-                    ? "bg-cyber-500 text-white"
-                    : "text-white/60 hover:text-white"
+                  tab === "contact" ? "bg-cyber-500 text-white" : "text-white/60 hover:text-white"
                 }`}
-                onClick={() => {
-                  setTab("consultancy");
-                  setFormState(initialFormState);
-                  setErrors({});
-                }}
+                onClick={() => switchTab("contact")}
               >
-                Consultancy
+                Contact
               </button>
               <button
                 type="button"
                 className={`type-label flex-1 rounded-md py-2.5 font-semibold transition-all ${
-                  tab === "internship"
-                    ? "bg-cyber-500 text-white"
-                    : "text-white/60 hover:text-white"
+                  tab === "internship" ? "bg-cyber-500 text-white" : "text-white/60 hover:text-white"
                 }`}
-                onClick={() => {
-                  setTab("internship");
-                  setFormState(initialFormState);
-                  setErrors({});
-                }}
+                onClick={() => switchTab("internship")}
               >
                 Internship
               </button>
@@ -199,57 +209,89 @@ export default function Contact() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} noValidate>
-                {tab === "consultancy" ? (
+              <form onSubmit={handleSubmit} noValidate encType="multipart/form-data">
+                {tab === "contact" ? (
                   <div className="flex flex-col gap-5">
-                    <Field label="Full Name" name="fullName" error={errors.fullName} required />
-                    <Field label="Company" name="company" error={errors.company} required />
+                    <Field label="Name" name="fullName" error={errors.fullName} required />
                     <Field label="Email" name="email" type="email" error={errors.email} required />
-                    <div>
-                      <label htmlFor="service" className="type-label mb-2 block font-medium text-white/80">
-                        Service
-                      </label>
-                      <select
-                        id="service"
-                        name="service"
-                        required
-                        className="type-body w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition-colors focus:border-cyber-500/50"
-                        defaultValue=""
-                        suppressHydrationWarning
-                      >
-                        <option value="" disabled className="bg-navy-900">
-                          Select a service
-                        </option>
-                        {serviceOptions.map((s) => (
-                          <option key={s} value={s} className="bg-navy-900">
-                            {s}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.service && <p className="type-label mt-1 text-red-400">{errors.service}</p>}
-                    </div>
+                    <Field label="Phone" name="phone" type="tel" error={errors.phone} required />
+                    <Field label="Company" name="company" error={errors.company} required />
+                    <Field label="Subject" name="subject" error={errors.subject} required />
                     <Field label="Message" name="message" error={errors.message} required textarea />
                   </div>
                 ) : (
                   <div className="flex flex-col gap-5">
-                    <Field label="Full Name" name="fullName" error={errors.fullName} required />
+                    <Field label="Name" name="fullName" error={errors.fullName} required />
                     <Field label="Email" name="email" type="email" error={errors.email} required />
+                    <Field label="Phone Number" name="phone" type="tel" error={errors.phone} required />
                     <Field label="College" name="college" error={errors.college} required />
+
+                    <div>
+                      <label htmlFor="degree" className="type-label mb-2 block font-medium text-white/80">
+                        Degree
+                      </label>
+                      <select
+                        id="degree"
+                        name="degree"
+                        required
+                        className={`${inputClass} bg-navy-900`}
+                        defaultValue=""
+                        suppressHydrationWarning
+                      >
+                        <option value="" disabled>
+                          Select degree
+                        </option>
+                        {degreeOptions.map((d) => (
+                          <option key={d} value={d}>
+                            {d}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.degree && <p className="type-label mt-1 text-red-400">{errors.degree}</p>}
+                    </div>
+
+                    <div>
+                      <label htmlFor="internship" className="type-label mb-2 block font-medium text-white/80">
+                        Selected Internship
+                      </label>
+                      <select
+                        id="internship"
+                        name="internship"
+                        required
+                        className={`${inputClass} bg-navy-900`}
+                        defaultValue=""
+                        suppressHydrationWarning
+                      >
+                        <option value="" disabled>
+                          Select internship program
+                        </option>
+                        {internshipPrograms.map((p) => (
+                          <option key={p.id} value={p.title}>
+                            {p.title}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.internship && (
+                        <p className="type-label mt-1 text-red-400">{errors.internship}</p>
+                      )}
+                    </div>
+
+                    <Field label="Message" name="message" error={errors.message} required textarea />
+
                     <div>
                       <label htmlFor="resume" className="type-label mb-2 block font-medium text-white/80">
-                        Resume Upload
+                        Resume (PDF)
                       </label>
                       <input
                         id="resume"
                         name="resume"
                         type="file"
-                        accept=".pdf,.doc,.docx"
+                        accept="application/pdf,.pdf"
                         required
                         className="type-label w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white/70 file:mr-4 file:rounded-md file:border-0 file:bg-cyber-500/20 file:px-4 file:py-1.5 file:text-base file:font-medium file:text-cyber-400"
                       />
                       {errors.resume && <p className="type-label mt-1 text-red-400">{errors.resume}</p>}
                     </div>
-                    <Field label="Why Join Us" name="whyJoin" error={errors.whyJoin} required textarea />
                   </div>
                 )}
 
@@ -291,8 +333,6 @@ function Field({
   textarea?: boolean;
 }) {
   const id = name;
-  const className =
-    "type-body w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/30 outline-none transition-colors focus:border-cyber-500/50";
 
   return (
     <div>
@@ -305,7 +345,7 @@ function Field({
           name={name}
           required={required}
           rows={4}
-          className={`${className} resize-none`}
+          className={`${inputClass} resize-none placeholder-white/30`}
           suppressHydrationWarning
         />
       ) : (
@@ -314,9 +354,17 @@ function Field({
           name={name}
           type={type}
           required={required}
-          className={className}
+          className={`${inputClass} placeholder-white/30`}
           suppressHydrationWarning
-          autoComplete={type === "email" ? "email" : name === "fullName" ? "name" : undefined}
+          autoComplete={
+            type === "email"
+              ? "email"
+              : type === "tel"
+                ? "tel"
+                : name === "fullName"
+                  ? "name"
+                  : undefined
+          }
         />
       )}
       {error && <p className="type-label mt-1 text-red-400">{error}</p>}

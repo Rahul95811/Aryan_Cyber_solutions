@@ -2,38 +2,85 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { z } from "zod";
 
-const consultancySchema = z.object({
-  type: z.literal("consultancy"),
-  fullName: z.string().min(2, "Full name is required"),
-  company: z.string().min(1, "Company is required"),
+/**
+ * Email-only contact API — no database, no storage, no application history.
+ * Resend is used solely to deliver admin notifications and acknowledgements.
+ */
+
+const BRAND_FROM_NAME = "Aryan Cyber Solutions";
+const DEFAULT_FROM_ADDRESS = "onboarding@resend.dev";
+const ADMIN_EMAIL = "sriaryan.dev@gmail.com";
+
+function resolveFromAddress(): string {
+  const raw = (process.env.RESEND_FROM_EMAIL || process.env.FROM_EMAIL || DEFAULT_FROM_ADDRESS)
+    .trim()
+    .replace(/^["']|["']$/g, "");
+
+  const angleMatch = raw.match(/<([^>]+)>/);
+  const address = (angleMatch?.[1] || raw).trim();
+
+  if (address.includes("@")) {
+    return `${BRAND_FROM_NAME} <${address}>`;
+  }
+
+  return `${BRAND_FROM_NAME} <${DEFAULT_FROM_ADDRESS}>`;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatDateTime(date: Date): string {
+  return date.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    dateStyle: "full",
+    timeStyle: "short",
+  });
+}
+
+const contactSchema = z.object({
+  type: z.literal("contact"),
+  fullName: z.string().min(2, "Name is required"),
   email: z.string().email("Valid email is required"),
-  service: z.string().min(1, "Please select a service"),
+  phone: z.string().min(7, "Phone number is required"),
+  company: z.string().min(1, "Company is required"),
+  subject: z.string().min(2, "Subject is required"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
 
 const internshipSchema = z.object({
   type: z.literal("internship"),
-  fullName: z.string().min(2, "Full name is required"),
+  fullName: z.string().min(2, "Name is required"),
   email: z.string().email("Valid email is required"),
+  phone: z.string().min(7, "Phone number is required"),
   college: z.string().min(2, "College is required"),
-  whyJoin: z.string().min(10, "Please tell us why you want to join"),
+  degree: z.string().min(1, "Degree is required"),
+  internship: z.string().min(1, "Please select an internship"),
+  message: z.string().min(10, "Message must be at least 10 characters"),
 });
+
+function zodErrors(error: z.ZodError): Record<string, string> {
+  const errors: Record<string, string> = {};
+  error.errors.forEach((err) => {
+    if (err.path[0]) errors[String(err.path[0])] = err.message;
+  });
+  return errors;
+}
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const type = formData.get("type") as string;
+    const type = String(formData.get("type") || "");
 
     const resendApiKey = process.env.RESEND_API_KEY;
-    const contactEmail =
-      process.env.CONTACT_TO_EMAIL ||
-      process.env.CONTACT_EMAIL ||
-      "contact@aryancybersolutions.com";
-    const fromEmail =
-      process.env.RESEND_FROM_EMAIL ||
-      (process.env.FROM_EMAIL
-        ? `Aryan Cyber Solutions <${process.env.FROM_EMAIL}>`
-        : "Aryan Cyber Solutions <onboarding@resend.dev>");
+    const adminEmail = process.env.CONTACT_TO_EMAIL || ADMIN_EMAIL;
+    const fromEmail = resolveFromAddress();
+    const submittedAt = formatDateTime(new Date());
 
     if (!resendApiKey) {
       console.error("RESEND_API_KEY is not configured");
@@ -45,73 +92,90 @@ export async function POST(request: NextRequest) {
 
     const resend = new Resend(resendApiKey);
 
-    if (type === "consultancy") {
+    if (type === "contact" || type === "consultancy") {
       const data = {
-        type: "consultancy" as const,
+        type: "contact" as const,
         fullName: String(formData.get("fullName") || ""),
-        company: String(formData.get("company") || ""),
         email: String(formData.get("email") || ""),
-        service: String(formData.get("service") || ""),
+        phone: String(formData.get("phone") || ""),
+        company: String(formData.get("company") || ""),
+        subject: String(formData.get("subject") || formData.get("service") || ""),
         message: String(formData.get("message") || ""),
       };
 
-      const result = consultancySchema.safeParse(data);
+      const result = contactSchema.safeParse(data);
       if (!result.success) {
-        const errors: Record<string, string> = {};
-        result.error.errors.forEach((err) => {
-          if (err.path[0]) errors[String(err.path[0])] = err.message;
-        });
-        return NextResponse.json({ message: "Validation failed", errors }, { status: 400 });
+        return NextResponse.json(
+          { message: "Validation failed", errors: zodErrors(result.error) },
+          { status: 400 }
+        );
       }
 
-      const { fullName, company, email, service, message } = result.data;
+      const { fullName, email, phone, company, subject, message } = result.data;
 
-      await resend.emails.send({
+      const notify = await resend.emails.send({
         from: fromEmail,
-        to: contactEmail,
+        to: adminEmail,
         replyTo: email,
-        subject: `Consultancy Inquiry — ${service}`,
+        subject: `New Contact Request - ${fullName}`,
         html: `
-          <h2>New Consultancy Inquiry</h2>
-          <p><strong>Name:</strong> ${fullName}</p>
-          <p><strong>Company:</strong> ${company}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Service:</strong> ${service}</p>
+          <h2>New Contact Form Submission</h2>
+          <p><strong>Name:</strong> ${escapeHtml(fullName)}</p>
+          <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+          <p><strong>Phone:</strong> ${escapeHtml(phone)}</p>
+          <p><strong>Company:</strong> ${escapeHtml(company)}</p>
+          <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
           <p><strong>Message:</strong></p>
-          <p>${message.replace(/\n/g, "<br>")}</p>
+          <p>${escapeHtml(message).replace(/\n/g, "<br>")}</p>
+          <p><strong>Date &amp; Time:</strong> ${escapeHtml(submittedAt)}</p>
         `,
       });
 
-      await resend.emails.send({
+      if (notify.error) {
+        console.error("Resend admin email error (contact):", notify.error);
+        return NextResponse.json(
+          { message: "Failed to send email. Please try again later.", detail: notify.error.message },
+          { status: 502 }
+        );
+      }
+
+      const ack = await resend.emails.send({
         from: fromEmail,
         to: email,
-        subject: "We received your security consultation request",
+        subject: "Message Received - Aryan Cyber Solutions",
         html: `
-          <h2>Thank you, ${fullName}</h2>
-          <p>We have received your consultation request regarding <strong>${service}</strong>.</p>
-          <p>Our security team will review your inquiry and respond within 24 business hours.</p>
+          <p>Hello ${escapeHtml(fullName)},</p>
+          <p>Thank you for contacting Aryan Cyber Solutions.</p>
+          <p>We have successfully received your message regarding <strong>${escapeHtml(subject)}</strong>.</p>
+          <p>Our team will review your inquiry and get back to you shortly.</p>
           <br>
-          <p>Best regards,<br>Aryan Cyber Solutions Team</p>
+          <p>Regards,</p>
+          <p>
+            Aryan Cyber Solutions<br>
+            Visakhapatnam, India<br>
+            sriaryan.dev@gmail.com
+          </p>
         `,
       });
+
+      if (ack.error) {
+        console.error("Resend acknowledgement error (contact):", ack.error);
+      }
     } else if (type === "internship") {
       const resume = formData.get("resume") as File | null;
 
       if (!resume || resume.size === 0) {
         return NextResponse.json(
-          { message: "Validation failed", errors: { resume: "Resume is required" } },
+          { message: "Validation failed", errors: { resume: "Resume (PDF) is required" } },
           { status: 400 }
         );
       }
 
-      const allowedTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
-      if (!allowedTypes.includes(resume.type)) {
+      const isPdf =
+        resume.type === "application/pdf" || resume.name.toLowerCase().endsWith(".pdf");
+      if (!isPdf) {
         return NextResponse.json(
-          { message: "Validation failed", errors: { resume: "Only PDF and DOC files are accepted" } },
+          { message: "Validation failed", errors: { resume: "Only PDF resumes are accepted" } },
           { status: 400 }
         );
       }
@@ -127,56 +191,84 @@ export async function POST(request: NextRequest) {
         type: "internship" as const,
         fullName: String(formData.get("fullName") || ""),
         email: String(formData.get("email") || ""),
+        phone: String(formData.get("phone") || ""),
         college: String(formData.get("college") || ""),
-        whyJoin: String(formData.get("whyJoin") || ""),
+        degree: String(formData.get("degree") || ""),
+        internship: String(formData.get("internship") || ""),
+        message: String(formData.get("message") || formData.get("whyJoin") || ""),
       };
 
       const result = internshipSchema.safeParse(data);
       if (!result.success) {
-        const errors: Record<string, string> = {};
-        result.error.errors.forEach((err) => {
-          if (err.path[0]) errors[String(err.path[0])] = err.message;
-        });
-        return NextResponse.json({ message: "Validation failed", errors }, { status: 400 });
+        return NextResponse.json(
+          { message: "Validation failed", errors: zodErrors(result.error) },
+          { status: 400 }
+        );
       }
 
-      const { fullName, email, college, whyJoin } = result.data;
+      const { fullName, email, phone, college, degree, internship, message } = result.data;
       const resumeBuffer = Buffer.from(await resume.arrayBuffer());
+      const resumeFilename = resume.name.toLowerCase().endsWith(".pdf")
+        ? resume.name
+        : `${resume.name}.pdf`;
 
-      await resend.emails.send({
+      const notify = await resend.emails.send({
         from: fromEmail,
-        to: contactEmail,
+        to: adminEmail,
         replyTo: email,
-        subject: `Internship Application — ${fullName}`,
+        subject: `New Internship Application - ${fullName}`,
         html: `
           <h2>New Internship Application</h2>
-          <p><strong>Name:</strong> ${fullName}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>College:</strong> ${college}</p>
-          <p><strong>Why Join Us:</strong></p>
-          <p>${whyJoin.replace(/\n/g, "<br>")}</p>
-          <p><em>Resume attached: ${resume.name}</em></p>
+          <p><strong>Name:</strong> ${escapeHtml(fullName)}</p>
+          <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+          <p><strong>Phone Number:</strong> ${escapeHtml(phone)}</p>
+          <p><strong>College:</strong> ${escapeHtml(college)}</p>
+          <p><strong>Degree:</strong> ${escapeHtml(degree)}</p>
+          <p><strong>Selected Internship:</strong> ${escapeHtml(internship)}</p>
+          <p><strong>Message:</strong></p>
+          <p>${escapeHtml(message).replace(/\n/g, "<br>")}</p>
+          <p><strong>Date &amp; Time:</strong> ${escapeHtml(submittedAt)}</p>
+          <p><em>Resume attached: ${escapeHtml(resumeFilename)}</em></p>
         `,
         attachments: [
           {
-            filename: resume.name,
+            filename: resumeFilename,
             content: resumeBuffer,
           },
         ],
       });
 
-      await resend.emails.send({
+      if (notify.error) {
+        console.error("Resend admin email error (internship):", notify.error);
+        return NextResponse.json(
+          { message: "Failed to send email. Please try again later.", detail: notify.error.message },
+          { status: 502 }
+        );
+      }
+
+      const ack = await resend.emails.send({
         from: fromEmail,
         to: email,
-        subject: "Your internship application has been received",
+        subject: "Application Received - Aryan Cyber Solutions",
         html: `
-          <h2>Thank you, ${fullName}</h2>
-          <p>We have received your internship application from <strong>${college}</strong>.</p>
-          <p>Our team will review your profile and resume, and get back to you shortly.</p>
+          <p>Hello ${escapeHtml(fullName)},</p>
+          <p>Thank you for applying to Aryan Cyber Solutions.</p>
+          <p>We have successfully received your internship application.</p>
+          <p>Our team will review your profile and contact you if you are shortlisted.</p>
+          <p>Please allow 3–5 business days for review.</p>
           <br>
-          <p>Best regards,<br>Aryan Cyber Solutions Team</p>
+          <p>Regards,</p>
+          <p>
+            Aryan Cyber Solutions<br>
+            Visakhapatnam, India<br>
+            sriaryan.dev@gmail.com
+          </p>
         `,
       });
+
+      if (ack.error) {
+        console.error("Resend acknowledgement error (internship):", ack.error);
+      }
     } else {
       return NextResponse.json({ message: "Invalid form type" }, { status: 400 });
     }
