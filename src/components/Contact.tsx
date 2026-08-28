@@ -105,7 +105,7 @@ export default function Contact() {
   }
 
   return (
-    <section id="contact" className="section-padding bg-navy-900/50">
+    <section id="contact" className="section-padding page-top bg-navy-900/50">
       <div className="container-main">
         <div className="section-header">
           <h2 className="section-heading">Contact Us</h2>
@@ -119,7 +119,7 @@ export default function Contact() {
           <div>
             <div className="mb-8 flex flex-col gap-6">
               <a
-                href={`mailto:${companyInfo.email}`}
+                href={`mailto:${companyInfo.contactEmail}`}
                 className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:border-cyber-500/30"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyber-500/10">
@@ -129,22 +129,22 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="type-label text-white/50">Business Email</p>
-                  <p className="type-body font-medium text-white">{companyInfo.email}</p>
+                  <p className="type-body font-medium text-white">{companyInfo.contactEmail}</p>
                 </div>
               </a>
 
               <a
-                href={`tel:${companyInfo.phone.replace(/\s/g, "")}`}
+                href={`mailto:${companyInfo.supportEmail}`}
                 className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-colors hover:border-cyber-500/30"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyber-500/10">
                   <svg className="h-5 w-5 text-cyber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                   </svg>
                 </div>
                 <div>
-                  <p className="type-label text-white/50">Phone</p>
-                  <p className="type-body font-medium text-white">{companyInfo.phone}</p>
+                  <p className="type-label text-white/50">Support Email</p>
+                  <p className="type-body font-medium text-white">{companyInfo.supportEmail}</p>
                 </div>
               </a>
 

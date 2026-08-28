@@ -32,10 +32,10 @@ export default function Hero() {
           </p>
 
           <div className="mb-12 flex flex-row flex-wrap items-center justify-center gap-6">
-            <Link href="#contact" className="btn-hero-primary">
+            <Link href="/contact" className="btn-hero-primary">
               Request Consultation
             </Link>
-            <Link href="#services" className="btn-hero-secondary">
+            <Link href="/services" className="btn-hero-secondary">
               Explore Services
             </Link>
           </div>

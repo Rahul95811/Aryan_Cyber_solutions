@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { navLinks } from "@/lib/data";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -15,12 +17,20 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
+
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
     <header
@@ -31,7 +41,7 @@ export default function Navbar() {
       }`}
     >
       <nav className="container-main flex h-14 items-center justify-between lg:h-16">
-        <Link href="#home" className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <Image
             src="/logo.jpeg"
             alt="Aryan Cyber Solutions"
@@ -45,26 +55,36 @@ export default function Navbar() {
           </span>
         </Link>
 
+        {/* Desktop nav */}
         <ul className="hidden items-center gap-7 lg:flex">
           {navLinks.map((link) => (
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="type-nav text-white/65 transition-colors hover:text-white"
+                className={`type-nav relative py-1 transition-colors ${
+                  isActive(link.href)
+                    ? "text-white"
+                    : "text-white/60 hover:text-white"
+                }`}
               >
                 {link.label}
+                {/* Active underline */}
+                {isActive(link.href) && (
+                  <span className="absolute inset-x-0 -bottom-0.5 h-[2px] rounded-full bg-cyber-400" />
+                )}
               </Link>
             </li>
           ))}
         </ul>
 
         <Link
-          href="#contact"
+          href="/contact"
           className="btn-sm hidden bg-cyber-500 text-white hover:bg-cyber-600 lg:inline-flex"
         >
           Contact Us
         </Link>
 
+        {/* Mobile hamburger */}
         <button
           type="button"
           className="flex h-9 w-9 items-center justify-center rounded border border-white/10 lg:hidden"
@@ -82,6 +102,7 @@ export default function Navbar() {
         </button>
       </nav>
 
+      {/* Mobile drawer */}
       {menuOpen && (
         <div className="border-t border-white/10 bg-[#0B1020] lg:hidden">
           <ul className="container-main flex flex-col py-3">
@@ -89,16 +110,23 @@ export default function Navbar() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="type-nav block px-1 py-2.5 text-white/70 transition-colors hover:text-white"
+                  className={`type-nav flex items-center gap-2 px-1 py-2.5 transition-colors ${
+                    isActive(link.href)
+                      ? "text-white"
+                      : "text-white/70 hover:text-white"
+                  }`}
                   onClick={() => setMenuOpen(false)}
                 >
+                  {isActive(link.href) && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyber-400" />
+                  )}
                   {link.label}
                 </Link>
               </li>
             ))}
             <li className="pt-2">
               <Link
-                href="#contact"
+                href="/contact"
                 className="btn-sm inline-flex bg-cyber-500 text-white"
                 onClick={() => setMenuOpen(false)}
               >

@@ -187,42 +187,42 @@ function WorkflowCard({
 }
 
 export default function About() {
-  const intro = useInView();
   const who = useInView();
   const expertiseRef = useInView();
   const workflowRef = useInView();
 
   return (
-    <section id="about" className="section-padding bg-navy-900/35">
+    <section id="about" className="section-padding page-top bg-navy-900/35">
       <div className="container-main">
-        {/* Intro — left-aligned content */}
-        <div
-          ref={intro.ref}
-          className={`section-header mb-16 transition-all duration-700 ${
-            intro.visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
-          }`}
-        >
-          <h2 className="section-heading">About Aryan Cyber Solutions</h2>
-          <p className="type-body prose-width text-white/55">
-            We help organizations strengthen their cybersecurity through consulting, VAPT,
-            SOC services, awareness programs, and industry-focused internship training.
-          </p>
-        </div>
 
-        {/* Who We Are */}
-        <div
-          ref={who.ref}
-          className={`mb-20 transition-all duration-700 ${
-            who.visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
-          }`}
-        >
-          <h3 className="sub-heading mb-5">Who We Are</h3>
-          <p className="type-body prose-width text-white/55">
-            Aryan Cyber Solutions is an enterprise cybersecurity company based in Visakhapatnam,
-            India. We deliver practical security solutions that combine consulting expertise with
-            hands-on training—helping organizations protect critical assets while building internal
-            capability under one trusted partner.
-          </p>
+        {/* Text content — below the video */}
+        <div className="mb-20 grid items-start gap-10 lg:grid-cols-2 lg:gap-12 xl:gap-16">
+          <div
+            ref={who.ref}
+            className={`transition-all duration-700 ${
+              who.visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
+            }`}
+          >
+            <h2 className="section-heading">About Aryan Cyber Solutions</h2>
+            <p className="type-body text-white/55">
+              We help organizations strengthen their cybersecurity through consulting, VAPT,
+              SOC services, awareness programs, and industry-focused internship training.
+            </p>
+          </div>
+
+          <div
+            className={`transition-all duration-700 ${
+              who.visible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
+            }`}
+          >
+            <h3 className="sub-heading mb-5">Who We Are</h3>
+            <p className="type-body text-white/55">
+              Aryan Cyber Solutions is an enterprise cybersecurity company based in Visakhapatnam,
+              India. We deliver practical security solutions that combine consulting expertise with
+              hands-on training—helping organizations protect critical assets while building internal
+              capability under one trusted partner.
+            </p>
+          </div>
         </div>
 
         {/* Our Expertise */}

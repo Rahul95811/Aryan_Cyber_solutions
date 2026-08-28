@@ -103,7 +103,7 @@ function DetailContent({
       </ul>
 
       <Link
-        href="#contact"
+        href="/contact"
         onClick={onClose}
         className="btn-primary inline-flex"
       >
@@ -192,7 +192,7 @@ export default function Services() {
   }
 
   return (
-    <section id="services" className="section-padding">
+    <section id="services" className="section-padding page-top">
       <div className="container-main">
         <div className="section-header">
           <h2 className="section-heading">Our Cybersecurity Services</h2>

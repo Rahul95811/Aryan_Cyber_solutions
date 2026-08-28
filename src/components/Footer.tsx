@@ -10,7 +10,7 @@ export default function Footer() {
       <div className="container-main section-padding !py-12">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-1">
-            <Link href="#home" className="mb-4 flex items-center gap-3">
+            <Link href="/" className="mb-4 flex items-center gap-3">
               <Image
                 src="/logo.jpeg"
                 alt="Aryan Cyber Solutions"
@@ -76,7 +76,7 @@ export default function Footer() {
               </svg>
               LinkedIn
             </a>
-            <p className="type-body mt-4 text-white/50">{companyInfo.email}</p>
+            <p className="type-body mt-4 text-white/50">{companyInfo.contactEmail}</p>
           </div>
         </div>
 

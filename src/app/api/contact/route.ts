@@ -6,10 +6,11 @@ import { z } from "zod";
  * Email-only contact API — no database, no storage, no application history.
  * Resend is used solely to deliver admin notifications and acknowledgements.
  */
+import { companyInfo } from "@/lib/data";
 
 const BRAND_FROM_NAME = "Aryan Cyber Solutions";
 const DEFAULT_FROM_ADDRESS = "onboarding@resend.dev";
-const ADMIN_EMAIL = "sriaryan.dev@gmail.com";
+const ADMIN_EMAIL = "contact@sriaryan.com";
 
 function resolveFromAddress(): string {
   const raw = (process.env.RESEND_FROM_EMAIL || process.env.FROM_EMAIL || DEFAULT_FROM_ADDRESS)
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
           <p>
             Aryan Cyber Solutions<br>
             Visakhapatnam, India<br>
-            sriaryan.dev@gmail.com
+            ${escapeHtml(companyInfo.contactEmail)}
           </p>
         `,
       });
@@ -258,7 +259,7 @@ export async function POST(request: NextRequest) {
           <p>
             Aryan Cyber Solutions<br>
             Visakhapatnam, India<br>
-            sriaryan.dev@gmail.com
+            ${escapeHtml(companyInfo.contactEmail)}
           </p>
         `,
       });

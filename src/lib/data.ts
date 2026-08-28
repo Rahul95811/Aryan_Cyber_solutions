@@ -1,10 +1,10 @@
 export const navLinks = [
-  { label: "Home", href: "#home" },
-  { label: "About", href: "#about" },
-  { label: "Services", href: "#services" },
-  { label: "Projects", href: "#projects" },
-  { label: "Internships", href: "#internships" },
-  { label: "Contact", href: "#contact" },
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+  { label: "Services", href: "/services" },
+  { label: "Projects", href: "/projects" },
+  { label: "Internships", href: "/internships" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export const stats = [
@@ -59,7 +59,55 @@ export const services = [
   },
 ];
 
-export const projects = [
+export type Project = {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  technologies: string[];
+  image?: string;
+  video?: string;
+  videoPlaceholder?: {
+    title: string;
+    subtitle: string;
+  };
+  badge?: string;
+  featured?: boolean;
+  milestone?: {
+    label: string;
+    value: string;
+  };
+  details?: {
+    overview: string;
+    currentMilestone: string;
+    developmentStatus: string;
+    demo: string;
+  };
+};
+
+export const projects: Project[] = [
+  {
+    id: "ai-cctv-exam-monitoring",
+    name: "AI CCTV Exam Monitoring",
+    tagline: "AI / Computer Vision / Cybersecurity",
+    description:
+      "An AI-powered CCTV-based exam monitoring solution designed to support secure and observant examination environments through intelligent video analysis.",
+    technologies: ["AI", "Computer Vision", "Cybersecurity"],
+    badge: "MSME — First Round Selected",
+    featured: true,
+    video: "/exammonitor.mp4",
+    milestone: {
+      label: "PROJECT STATUS",
+      value: "First Round MSME Selection",
+    },
+    details: {
+      overview:
+        "An AI-powered CCTV-based examination monitoring concept focused on improving observation and maintaining secure examination environments through intelligent video analysis.",
+      currentMilestone: "Selected for the first round of MSME selection/evaluation.",
+      developmentStatus: "Prototype / Development",
+      demo: "Coming Soon",
+    },
+  },
   {
     id: "linkshield",
     name: "LinkShield AV",
@@ -67,18 +115,20 @@ export const projects = [
     description:
       "A next-generation endpoint protection platform designed to detect, prevent, and respond to advanced malware threats across enterprise environments with real-time threat intelligence.",
     technologies: ["C++", "Windows API", "Threat Intelligence", "Real-time Scanning"],
-    image: "/linkshield-preview.jpg",
     video: "/linkshield.mp4",
+    milestone: {
+      label: "PROJECT STATUS",
+      value: "Active Development",
+    },
+    details: {
+      overview:
+        "LinkShield AV is an enterprise-grade endpoint protection solution built for Windows environments. It focuses on real-time detection and response to malware threats using low-level system APIs and threat intelligence feeds.",
+      currentMilestone: "Core detection engine built and functional. Demo preview available.",
+      developmentStatus: "Active Development",
+      demo: "Preview Available",
+    },
   },
-  {
-    id: "ai-vision",
-    name: "Artificial Intelligence & Vision",
-    tagline: "AI Monitoring CCTV",
-    description:
-      "Intelligent video surveillance system powered by computer vision and machine learning to detect anomalies, unauthorized access, and security threats in real time.",
-    technologies: ["Python", "TensorFlow", "OpenCV", "Edge Computing"],
-    image: "/Ai.png",
-  },
+
   {
     id: "iot-detection",
     name: "IoT Cyber Attack Detection Platform",
@@ -87,6 +137,17 @@ export const projects = [
       "Advanced platform for monitoring IoT device traffic and detecting anomalous behavior patterns indicative of cyber attacks on connected infrastructure.",
     technologies: ["Machine Learning", "Network Analysis", "IoT Protocols", "Cloud"],
     image: "/iot.png",
+    milestone: {
+      label: "PROJECT STATUS",
+      value: "Research & Development",
+    },
+    details: {
+      overview:
+        "A research-driven platform focused on analysing IoT network traffic to identify anomalous patterns and flag potential cyber threats targeting connected devices and smart infrastructure.",
+      currentMilestone: "Initial research phase complete. Traffic analysis module in development.",
+      developmentStatus: "Research / Development",
+      demo: "Coming Soon",
+    },
   },
 ];
 
@@ -100,8 +161,8 @@ export const serviceOptions = [
 ];
 
 export const companyInfo = {
-  email: "sriaryan.dev@gmail.com",
-  phone: "+91 98850 96787",
+  contactEmail: "contact@sriaryan.com",
+  supportEmail: "support@sriaryan.com",
   location: "Visakhapatnam, India",
   linkedin: "https://linkedin.com/company/aryan-cyber-solutions",
 };

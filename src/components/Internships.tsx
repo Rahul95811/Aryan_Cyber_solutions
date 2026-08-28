@@ -230,7 +230,7 @@ function OverlayContent({
             {showCurriculum ? "Hide Curriculum" : "View Curriculum"}
           </button>
           <Link
-            href="#contact"
+            href="/contact"
             onClick={onClose}
             className="btn-primary"
           >
@@ -444,7 +444,7 @@ export default function Internships() {
     <section
       id="internships"
       ref={sectionRootRef}
-      className="section-padding scroll-mt-20 bg-navy-900/30"
+      className="section-padding page-top scroll-mt-20 bg-navy-900/30"
     >
       <div className="container-main">
         <div className="section-header">
