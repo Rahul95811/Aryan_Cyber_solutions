@@ -1,9 +1,17 @@
+'use client';
+
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { navLinks, companyInfo } from "@/lib/data";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const pathname = usePathname();
+
+  if (pathname?.startsWith('/training/assessment')) {
+    return null;
+  }
 
   return (
     <footer className="border-t border-white/10 bg-navy-950">
