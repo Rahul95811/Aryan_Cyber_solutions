@@ -152,13 +152,18 @@ export async function POST(request: NextRequest) {
     );
 
     // ── Confirmation emails ───────────────────────────────────────────
-    const resendApiKey = process.env.RESEND_API_KEY;
+    const resendApiKey = process.env.ACS_RESEND_API_KEY || process.env.RESEND_API_KEY;
     if (resendApiKey) {
       const resend = new Resend(resendApiKey);
-      const fromRaw = (process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev').replace(/^["']|["']$/g, '');
+      const fromRaw = (process.env.ACS_RESEND_FROM_EMAIL ?? process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev').replace(/^["']|["']$/g, '');
       const angleMatch = fromRaw.match(/<([^>]+)>/);
       const from = `Aryan Cyber Solutions <${angleMatch?.[1] ?? fromRaw}>`;
-      const adminEmail = process.env.TRAINING_ADMIN_EMAIL ?? process.env.CONTACT_TO_EMAIL ?? companyInfo.contactEmail;
+      const adminEmail =
+        process.env.ACS_TRAINING_ADMIN_EMAIL ??
+        process.env.TRAINING_ADMIN_EMAIL ??
+        process.env.ACS_CONTACT_TO_EMAIL ??
+        process.env.CONTACT_TO_EMAIL ??
+        companyInfo.contactEmail;
 
       // ── Candidate: simple acknowledgement ──
       resend.emails.send({

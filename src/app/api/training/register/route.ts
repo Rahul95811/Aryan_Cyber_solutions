@@ -132,10 +132,10 @@ export async function POST(request: NextRequest) {
     const token = await createSessionToken(candidateId);
 
     // Send confirmation email
-    const resendApiKey = process.env.RESEND_API_KEY;
+    const resendApiKey = process.env.ACS_RESEND_API_KEY || process.env.RESEND_API_KEY;
     if (resendApiKey) {
       const resend = new Resend(resendApiKey);
-      const fromRaw = (process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev').replace(/^["']|["']$/g, '');
+      const fromRaw = (process.env.ACS_RESEND_FROM_EMAIL ?? process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev').replace(/^["']|["']$/g, '');
       const angleMatch = fromRaw.match(/<([^>]+)>/);
       const fromAddr = angleMatch?.[1] ?? fromRaw;
       const from = `Aryan Cyber Solutions <${fromAddr}>`;

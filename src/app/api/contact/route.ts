@@ -13,7 +13,12 @@ const DEFAULT_FROM_ADDRESS = "onboarding@resend.dev";
 const ADMIN_EMAIL = "contact@sriaryan.com";
 
 function resolveFromAddress(): string {
-  const raw = (process.env.RESEND_FROM_EMAIL || process.env.FROM_EMAIL || DEFAULT_FROM_ADDRESS)
+  const raw = (
+    process.env.ACS_RESEND_FROM_EMAIL ||
+    process.env.RESEND_FROM_EMAIL ||
+    process.env.FROM_EMAIL ||
+    DEFAULT_FROM_ADDRESS
+  )
     .trim()
     .replace(/^["']|["']$/g, "");
 
@@ -77,13 +82,13 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const type = String(formData.get("type") || "");
 
-    const resendApiKey = process.env.RESEND_API_KEY;
-    const adminEmail = process.env.CONTACT_TO_EMAIL || ADMIN_EMAIL;
+    const resendApiKey = process.env.ACS_RESEND_API_KEY || process.env.RESEND_API_KEY;
+    const adminEmail = process.env.ACS_CONTACT_TO_EMAIL || process.env.CONTACT_TO_EMAIL || process.env.CONTACT_EMAIL || ADMIN_EMAIL;
     const fromEmail = resolveFromAddress();
     const submittedAt = formatDateTime(new Date());
 
     if (!resendApiKey) {
-      console.error("RESEND_API_KEY is not configured");
+      console.error("ACS_RESEND_API_KEY / RESEND_API_KEY is not configured");
       return NextResponse.json(
         { message: "Email service is not configured. Please contact us directly." },
         { status: 503 }
