@@ -165,5 +165,5 @@ export const companyInfo = {
   contactEmail: "contact@sriaryan.com",
   supportEmail: "support@sriaryan.com",
   location: "Visakhapatnam, India",
-  linkedin: "https://linkedin.com/company/aryan-cyber-solutions",
+  linkedin: "https://www.linkedin.com/in/aryan-software-solutions-b9ba57422/",
 };
