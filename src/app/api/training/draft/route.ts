@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import Assessment from '@/lib/models/Assessment';
 import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limit';
 
 const draftSchema = z.object({
   answers: z.object({
@@ -18,14 +19,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limit: 60 requests per minute per candidate
+    const { success } = await rateLimit(`draft_${candidateId}`, 60, 60);
+    if (!success) {
+      return NextResponse.json({ message: 'Too many requests' }, { status: 429 });
+    }
+
     const body = await request.json();
     const result = draftSchema.safeParse(body);
     
     if (!result.success) {
       return NextResponse.json({ message: 'Invalid payload' }, { status: 400 });
     }
-
-    const { answers } = result.data;
 
     await connectDB();
 
@@ -38,17 +43,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Assessment already completed' }, { status: 409 });
     }
 
+    if (assessment.integrityLockStatus === 'locked') {
+      return NextResponse.json({ message: 'Assessment is locked' }, { status: 403 });
+    }
+
+    const { answers } = result.data;
+
+    const updateFields: any = {
+      draftAnswers: {
+        mcq: answers.mcq ?? {},
+        written: answers.written ?? {},
+        savedAt: new Date().toISOString(),
+      },
+    };
+
     await Assessment.updateOne(
       { candidateId },
-      {
-        $set: {
-          draftAnswers: {
-            mcq: answers.mcq ?? {},
-            written: answers.written ?? {},
-            savedAt: new Date().toISOString(),
-          },
-        },
-      }
+      { $set: updateFields }
     );
 
     return NextResponse.json({ saved: true });
@@ -70,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     const assessment = await Assessment.findOne(
       { candidateId },
-      { draftAnswers: 1, startedAt: 1, completionStatus: 1 }
+      { draftAnswers: 1, startedAt: 1, completionStatus: 1, integrityStrikeCount: 1, integrityLockStatus: 1 }
     );
 
     if (!assessment) {
@@ -81,6 +92,8 @@ export async function GET(request: NextRequest) {
       draftAnswers: assessment.draftAnswers ?? null,
       startedAt: assessment.startedAt?.toISOString() ?? null,
       completionStatus: assessment.completionStatus,
+      integrityStrikeCount: assessment.integrityStrikeCount ?? 0,
+      integrityLockStatus: assessment.integrityLockStatus ?? 'none',
     });
   } catch (error) {
     console.error('[training/draft GET]', error);

@@ -14,7 +14,9 @@ export async function middleware(request: NextRequest) {
   const isProtectedApi = 
     pathname === '/api/training/start' || 
     pathname === '/api/training/draft' || 
-    pathname === '/api/training/submit';
+    pathname === '/api/training/submit' ||
+    pathname === '/api/training/lock' ||
+    pathname === '/api/training/strike';
 
   if (!isProtectedPage && !isProtectedApi) {
     return NextResponse.next();
@@ -32,11 +34,13 @@ export async function middleware(request: NextRequest) {
     return handleUnauthorized(request, isProtectedApi);
   }
 
-  // We could rewrite the URL to inject the true candidate ID, or just pass it in a header
-  // Setting a header allows the downstream API/page to trust the middleware's validation
-  const response = NextResponse.next();
-  response.headers.set('x-candidate-id', session.candidateId);
-  return response;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-candidate-id', session.candidateId);
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 function handleUnauthorized(request: NextRequest, isApi: boolean) {

@@ -17,11 +17,9 @@ Open [http://localhost:3000](http://localhost:3000).
 Create a `.env.local` file:
 
 ```
-ACS_RESEND_API_KEY=re_your_api_key_here
-ACS_CONTACT_TO_EMAIL=sriaryan.dev@gmail.com
-ACS_RESEND_FROM_EMAIL="Aryan Cyber Solutions <onboarding@resend.dev>"
-ACS_TRAINING_ADMIN_EMAIL=sriaryan.dev@gmail.com
-MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/acs_training?retryWrites=true&w=majority
+RESEND_API_KEY=re_your_api_key_here
+CONTACT_EMAIL=contact@aryancybersolutions.com
+FROM_EMAIL=onboarding@resend.dev
 ```
 
 Get your Resend API key at [resend.com](https://resend.com).

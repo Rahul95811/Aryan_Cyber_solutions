@@ -56,12 +56,12 @@ export const networkQuestions: MCQQuestion[] = [
     section: 'networks',
     questionNumber: 3,
     question:
-      'A host is configured with the IP address 192.168.10.50 and subnet mask 255.255.255.192. What is the broadcast address of the subnet this host belongs to?',
+      'During a TCP connection, a client sends a packet with the SYN flag set. The server responds with SYN-ACK. What does the client send next, and what state does the connection enter after this exchange?',
     options: [
-      '192.168.10.127',
-      '192.168.10.63',
-      '192.168.10.255',
-      '192.168.10.31',
+      'FIN — the connection is terminated',
+      'ACK — the connection enters the ESTABLISHED state',
+      'RST — the connection is reset',
+      'SYN — the handshake restarts',
     ],
   },
   {
@@ -95,12 +95,12 @@ export const networkQuestions: MCQQuestion[] = [
     section: 'networks',
     questionNumber: 6,
     question:
-      'During a TCP connection, a client sends a packet with the SYN flag set. The server responds with SYN-ACK. What does the client send next, and what state does the connection enter after this exchange?',
+      'A private network uses NAT to share a single public IP. A packet leaving the network has its source IP rewritten from 192.168.1.10 to 203.0.113.5. When a response comes back to 203.0.113.5, which device is responsible for forwarding it to the correct internal host?',
     options: [
-      'FIN — the connection is terminated',
-      'ACK — the connection enters the ESTABLISHED state',
-      'RST — the connection is reset',
-      'SYN — the handshake restarts',
+      'The destination web server',
+      'The ISP\'s router',
+      'The NAT device (router/firewall) using its translation table',
+      'The DHCP server',
     ],
   },
   {
@@ -108,12 +108,12 @@ export const networkQuestions: MCQQuestion[] = [
     section: 'networks',
     questionNumber: 7,
     question:
-      'A private network uses NAT to share a single public IP. A packet leaving the network has its source IP rewritten from 192.168.1.10 to 203.0.113.5. When a response comes back to 203.0.113.5, which device is responsible for forwarding it to the correct internal host?',
+      'A host is configured with the IP address 192.168.10.50 and subnet mask 255.255.255.192. What is the broadcast address of the subnet this host belongs to?',
     options: [
-      'The destination web server',
-      'The ISP\'s router',
-      'The NAT device (router/firewall) using its translation table',
-      'The DHCP server',
+      '192.168.10.127',
+      '192.168.10.63',
+      '192.168.10.255',
+      '192.168.10.31',
     ],
   },
   {
@@ -238,12 +238,12 @@ export const linuxQuestions: MCQQuestion[] = [
     section: 'linux',
     questionNumber: 7,
     question:
-      'A service seems to be consuming too much CPU. Which command shows a real-time, continuously updating view of running processes sorted by CPU usage?',
+      'A junior admin sets up a cron job to run a backup script every night, but it keeps failing. When they run the script manually as the same user in their terminal, it works perfectly. Which of the following is the MOST likely cause?',
     options: [
-      'ps aux --sort cpu',
-      'ls -l /proc/',
-      'top',
-      'cat /var/log/syslog | grep cpu',
+      'The cron environment lacks the same PATH and environment variables as the user\'s interactive shell',
+      'Cron jobs do not have execute permissions by default',
+      'The cron daemon runs on a restricted kernel namespace',
+      'The script contains syntax errors that cron cannot parse',
     ],
   },
   {

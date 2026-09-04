@@ -88,29 +88,56 @@ function SelectField({
       <label htmlFor={name} className="type-label mb-1.5 block font-medium text-white/80">
         {label} {required && <span className="text-cyber-400">*</span>}
       </label>
-      <select
-        id={name}
-        name={name}
-        required={required}
-        defaultValue=""
-        className={`${inputClass} ${error ? 'border-red-400/50' : ''}`}
-        style={{ colorScheme: 'dark' }}
-      >
-        <option value="" disabled className="bg-navy-900 text-white/40">
-          {placeholder ?? `Select ${label}`}
-        </option>
-        {options.map((o) => (
-          <option key={o} value={o} className="bg-navy-900 text-white">
-            {o}
+      <div className="relative flex items-center">
+        <select
+          id={name}
+          name={name}
+          required={required}
+          defaultValue=""
+          className={`${inputClass} appearance-none pr-10 ${error ? 'border-red-400/50' : ''}`}
+          style={{ colorScheme: 'dark' }}
+        >
+          <option value="" disabled className="bg-navy-900 text-white/40">
+            {placeholder ?? `Select ${label}`}
           </option>
-        ))}
-      </select>
+          {options.map((o) => (
+            <option key={o} value={o} className="bg-navy-900 text-white">
+              {o}
+            </option>
+          ))}
+        </select>
+        <div className="pointer-events-none absolute right-4 text-white/50">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
       {error && <p className="type-label mt-1 text-red-400">{error}</p>}
     </div>
   );
 }
 
 function PhoneField({ error }: { error?: string }) {
+  const [localPhone, setLocalPhone] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let raw = e.target.value.replace(/\\D/g, ''); // Extract only digits
+    
+    // Auto-normalize if they pasted an Indian number with country code
+    if (raw.length >= 12 && raw.startsWith('91')) {
+      raw = raw.slice(2);
+    } else if (raw.length >= 11 && raw.startsWith('0')) {
+      raw = raw.slice(1);
+    }
+    
+    // Bound the local digit length to exactly 10
+    if (raw.length > 10) {
+      raw = raw.slice(0, 10);
+    }
+
+    setLocalPhone(raw);
+  };
+
   return (
     <div>
       <label htmlFor="phone" className="type-label mb-1.5 block font-medium text-white/80">
@@ -141,15 +168,17 @@ function PhoneField({ error }: { error?: string }) {
           id="phone"
           name="phone"
           type="tel"
+          inputMode="numeric"
           required
           autoComplete="tel-national"
           placeholder="98765 43210"
           className="type-body w-full bg-transparent px-4 py-3 text-white outline-none placeholder-white/25"
           pattern="[0-9]{10}"
+          maxLength={10}
+          minLength={10}
           title="Enter a 10-digit mobile number"
-          onInput={(e) => {
-            e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
-          }}
+          value={localPhone}
+          onChange={handleChange}
         />
       </div>
       {error && <p className="type-label mt-1 text-red-400">{error}</p>}
@@ -170,8 +199,17 @@ export default function RegisterForm() {
     const fd = new FormData(e.currentTarget);
     
     const countryCode = String(fd.get('countryCode') ?? '+91');
-    const localPhone = String(fd.get('phone') ?? '').replace(/\D/g, '');
-    const phone = localPhone ? `${countryCode}${localPhone}` : '';
+    let localPhone = String(fd.get('phone') ?? '').replace(/\D/g, '');
+    
+    let phone = '';
+    if (localPhone) {
+      if (countryCode === '+91') {
+        phone = `+91${localPhone}`;
+      } else {
+        // Fallback for non-India
+        phone = `${countryCode}${localPhone}`;
+      }
+    }
 
     const body = {
       fullName:       String(fd.get('fullName') ?? ''),

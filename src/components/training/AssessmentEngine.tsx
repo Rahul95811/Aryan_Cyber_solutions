@@ -21,7 +21,7 @@ interface Answers {
 }
 
 export interface IntegrityEvent {
-  type: 'tab_hidden' | 'tab_visible' | 'copy_attempt' | 'cut_attempt' | 'paste_attempt' | 'fullscreen_exit' | 'context_menu';
+  type: 'tab_hidden' | 'tab_visible' | 'copy_attempt' | 'cut_attempt' | 'paste_attempt' | 'fullscreen_exit' | 'context_menu' | 'print_attempt' | 'save_attempt' | 'navigation_attempt' | 'drag_attempt' | 'screen_capture_attempt' | 'screenshot_shortcut_attempt' | 'integrity_strike' | 'fullscreen_grace_expired' | 'absence' | 'absence_returned' | 'grace_period_used';
   timestamp: string;
   durationMs?: number;
 }
@@ -31,6 +31,8 @@ interface Props {
   candidateName: string;
   deadlineTimestamp: number; // ms — absolute server-anchored deadline
   initialDraft?: Answers | null;
+  initialStrikeCount?: number;
+  initialLockStatus?: boolean;
 }
 
 // ─── Timer hook ───────────────────────────────────────────────
@@ -503,6 +505,8 @@ export default function AssessmentEngine({
   candidateName,
   deadlineTimestamp,
   initialDraft,
+  initialStrikeCount = 0,
+  initialLockStatus = false,
 }: Props) {
   const router = useRouter();
   const remaining = useCountdown(deadlineTimestamp);
@@ -523,15 +527,82 @@ export default function AssessmentEngine({
   const [hasStarted, setHasStarted] = useState(false);
   const [integrityEvents, setIntegrityEvents] = useState<IntegrityEvent[]>([]);
   const [integrityWarning, setIntegrityWarning] = useState('');
-  const tabHiddenTime = useRef<number>(0);
+  
+  const [strikeCount, setStrikeCount] = useState(initialStrikeCount);
+  const [isLocked, setIsLocked] = useState(initialLockStatus);
+  const [graceOverlay, setGraceOverlay] = useState<{type: 'fullscreen', remaining: number} | null>(null);
+  const [strikeWarningData, setStrikeWarningData] = useState<{strike: number, remaining: number} | null>(null);
+
+  const awayStartTimeRef = useRef<number>(0);
+  const violationFiredRef = useRef<boolean>(false);
+  const graceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const screenshotDebounceRef = useRef<number>(0);
 
   const recordIntegrityEvent = useCallback((type: IntegrityEvent['type'], durationMs?: number) => {
     setIntegrityEvents(prev => [...prev, { type, timestamp: new Date().toISOString(), durationMs }]);
-    if (type === 'fullscreen_exit') {
-      setIntegrityWarning('Fullscreen exited. Please remain focused on the assessment. This activity has been recorded.');
-      setTimeout(() => setIntegrityWarning(''), 5000);
-    }
   }, []);
+
+  const handleStrike = useCallback(async (reason: string, triggerEvent: IntegrityEvent['type'], durationMs?: number) => {
+    if (isLocked) return;
+
+    const eventId = crypto.randomUUID();
+    const timestamp = new Date().toISOString();
+
+    recordIntegrityEvent(triggerEvent, durationMs);
+
+    try {
+      const res = await fetch('/api/training/strike', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventId,
+          eventType: triggerEvent,
+          timestamp,
+          durationMs
+        }),
+      });
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+
+      if (data.integrityLockStatus === 'locked') {
+        setIsLocked(true);
+        setGraceOverlay(null);
+        setStrikeWarningData(null);
+        return;
+      }
+
+      setStrikeCount(data.integrityStrikeCount);
+
+      if (data.integrityStrikeCount > strikeCount) {
+        setStrikeWarningData({ strike: data.integrityStrikeCount, remaining: 7 });
+        if (warningTimerRef.current) clearInterval(warningTimerRef.current);
+        warningTimerRef.current = setInterval(() => {
+          if (document.hidden) return;
+          setStrikeWarningData(curr => {
+            if (!curr) {
+              clearInterval(warningTimerRef.current!);
+              return null;
+            }
+            if (curr.remaining <= 1) {
+              if (document.fullscreenElement) {
+                clearInterval(warningTimerRef.current!);
+                return null;
+              } else {
+                clearInterval(warningTimerRef.current!);
+                return { ...curr, remaining: 0 };
+              }
+            }
+            return { ...curr, remaining: curr.remaining - 1 };
+          });
+        }, 1000);
+      }
+    } catch {
+      // ignore network errors
+    }
+  }, [isLocked, recordIntegrityEvent, strikeCount]);
 
   // ── Answer helpers ────────────────────────────────────────
 
@@ -594,35 +665,83 @@ export default function AssessmentEngine({
     return () => clearInterval(id);
   }, [answers, candidateId]);
 
-  // ── Tab visibility tracking (context for reviewer) ───────
-
+  // ── Unified Absence Tracking (Visibility, Focus & Fullscreen) ───
   useEffect(() => {
-    const onVisChange = () => {
-      if (!hasStarted) return;
-      if (document.hidden) {
-        tabHiddenTime.current = Date.now();
-        recordIntegrityEvent('tab_hidden');
-      } else {
-        const durationMs = tabHiddenTime.current > 0 ? Date.now() - tabHiddenTime.current : undefined;
-        recordIntegrityEvent('tab_visible', durationMs);
-        setIntegrityWarning('Assessment window changed. Please return to the assessment. This activity has been recorded.');
-        setTimeout(() => setIntegrityWarning(''), 5000);
+    const onAwayChange = () => {
+      if (!hasStarted || isLocked) return;
+
+      const isAway = 
+        document.hidden || 
+        document.visibilityState !== 'visible' || 
+        !document.hasFocus() || 
+        !document.fullscreenElement;
+
+      if (isAway && !awayStartTimeRef.current) {
+        // Candidate just left
+        awayStartTimeRef.current = Date.now();
+        violationFiredRef.current = false;
+        
+        // Start Grace Period UI (mostly visible if they exited fullscreen but didn't switch tabs)
+        setGraceOverlay({ type: 'fullscreen', remaining: 5 });
+
+        if (graceTimerRef.current) clearInterval(graceTimerRef.current);
+        
+        graceTimerRef.current = setInterval(() => {
+          const elapsed = Date.now() - awayStartTimeRef.current;
+          
+          if (elapsed > 5000) {
+            if (!violationFiredRef.current) {
+              violationFiredRef.current = true;
+              handleStrike('Assessment absence for more than 5 seconds', 'absence', elapsed);
+            }
+            setGraceOverlay(null);
+            clearInterval(graceTimerRef.current!);
+          } else {
+            setGraceOverlay(curr => {
+              if (curr) {
+                return { ...curr, remaining: 5 - Math.floor(elapsed / 1000) };
+              }
+              return curr;
+            });
+          }
+        }, 500);
+
+      } else if (!isAway && awayStartTimeRef.current) {
+        // Candidate returned
+        const elapsed = Date.now() - awayStartTimeRef.current;
+        recordIntegrityEvent('absence_returned', elapsed);
+
+        if (elapsed > 5000 && !violationFiredRef.current) {
+           // Fallback if interval was throttled heavily by browser
+           violationFiredRef.current = true;
+           handleStrike('Assessment absence for more than 5 seconds', 'absence', elapsed);
+        } else if (elapsed > 0 && elapsed <= 5000) {
+           recordIntegrityEvent('grace_period_used', elapsed);
+        }
+
+        if (graceTimerRef.current) clearInterval(graceTimerRef.current);
+        awayStartTimeRef.current = 0;
+        violationFiredRef.current = false;
+        setGraceOverlay(null);
+        
+        // If they returned before the warning was triggered, ensure it stays cleared.
+        // If they received a strike, the handleStrike function has set up the warningTimerRef already.
+        setStrikeWarningData(curr => curr && curr.remaining === 0 ? null : curr);
       }
     };
-    document.addEventListener('visibilitychange', onVisChange);
-    return () => document.removeEventListener('visibilitychange', onVisChange);
-  }, [hasStarted, recordIntegrityEvent]);
 
-  // ── Fullscreen tracking ──────────────────────────────────
-  useEffect(() => {
-    const onFullScreenChange = () => {
-      if (!document.fullscreenElement && hasStarted) {
-        recordIntegrityEvent('fullscreen_exit');
-      }
+    window.addEventListener('blur', onAwayChange);
+    window.addEventListener('focus', onAwayChange);
+    document.addEventListener('visibilitychange', onAwayChange);
+    document.addEventListener('fullscreenchange', onAwayChange);
+
+    return () => {
+      window.removeEventListener('blur', onAwayChange);
+      window.removeEventListener('focus', onAwayChange);
+      document.removeEventListener('visibilitychange', onAwayChange);
+      document.removeEventListener('fullscreenchange', onAwayChange);
     };
-    document.addEventListener('fullscreenchange', onFullScreenChange);
-    return () => document.removeEventListener('fullscreenchange', onFullScreenChange);
-  }, [hasStarted, recordIntegrityEvent]);
+  }, [hasStarted, isLocked, recordIntegrityEvent, handleStrike]);
 
   // ── Clipboard & Context Menu Restrictions ────────────────
   const handleCopy = useCallback((e: React.ClipboardEvent) => {
@@ -640,16 +759,88 @@ export default function AssessmentEngine({
     recordIntegrityEvent('context_menu');
   }, [recordIntegrityEvent]);
 
+  const handleDragStart = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    recordIntegrityEvent('drag_attempt');
+  }, [recordIntegrityEvent]);
+
   // ── Prevent accidental navigation ────────────────────────
 
   useEffect(() => {
+    if (!hasStarted) return;
     const handler = (e: BeforeUnloadEvent) => {
+      recordIntegrityEvent('navigation_attempt');
       e.preventDefault();
       e.returnValue = '';
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, []);
+  }, [hasStarted, recordIntegrityEvent]);
+
+  // ── Exam Mode Body Class & Keyboard Restrictions ─────────
+
+  useEffect(() => {
+    if (!hasStarted) return;
+    document.body.classList.add('exam-mode');
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isLocked) return;
+      
+      const key = e.key.toLowerCase();
+      
+      // Screenshot detection
+      if (key === 'printscreen' || (e.metaKey && e.shiftKey && (key === 's' || key === '4' || key === '3'))) {
+        e.preventDefault();
+        
+        const now = Date.now();
+        if (now - screenshotDebounceRef.current > 2000) {
+          screenshotDebounceRef.current = now;
+          handleStrike('Screenshot shortcut detected', 'screenshot_shortcut_attempt', 0);
+        }
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key) {
+        const key = e.key.toLowerCase();
+        if (key === 'p') {
+          e.preventDefault();
+          recordIntegrityEvent('print_attempt');
+          setIntegrityWarning('Printing is disabled in Exam Mode.');
+          setTimeout(() => setIntegrityWarning(''), 3000);
+        } else if (key === 's') {
+          e.preventDefault();
+          recordIntegrityEvent('save_attempt');
+          setIntegrityWarning('Saving is disabled in Exam Mode.');
+          setTimeout(() => setIntegrityWarning(''), 3000);
+        } else if (key === 'u') {
+          e.preventDefault();
+          setIntegrityWarning('View Source is disabled in Exam Mode.');
+          setTimeout(() => setIntegrityWarning(''), 3000);
+        } else if (key === 'a') {
+          // Prevent select all outside of textareas
+          const target = e.target as HTMLElement;
+          if (target.tagName !== 'TEXTAREA' && target.tagName !== 'INPUT') {
+            e.preventDefault();
+          }
+        }
+      }
+      
+      // Intercept reload shortcuts
+      if (e.key === 'F5' || (e.ctrlKey && e.key.toLowerCase() === 'r') || (e.metaKey && e.key.toLowerCase() === 'r')) {
+        e.preventDefault();
+        recordIntegrityEvent('navigation_attempt');
+        setIntegrityWarning('Reloading is disabled in Exam Mode.');
+        setTimeout(() => setIntegrityWarning(''), 3000);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.classList.remove('exam-mode');
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [hasStarted, isLocked, recordIntegrityEvent, handleStrike]);
 
   // ── Submit function ───────────────────────────────────────
 
@@ -743,19 +934,18 @@ export default function AssessmentEngine({
   if (!hasStarted) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-navy-950 px-6">
-        <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-navy-900/50 p-8 shadow-2xl backdrop-blur-sm">
-          <h2 className="type-sub mb-4 text-center text-white">Assessment Integrity & Rules</h2>
-          <div className="mb-8 space-y-4 rounded-xl border border-amber-400/20 bg-amber-400/5 p-5 text-sm text-amber-400/90">
-            <p><strong>Please remain on the assessment page while completing the assessment.</strong></p>
-            <ul className="list-inside list-disc space-y-2 opacity-80">
-              <li>Leaving the assessment window may be recorded as an integrity event.</li>
-              <li>Fullscreen helps keep the assessment focused. If you leave fullscreen, the event may be recorded.</li>
-              <li>Copying and pasting are restricted and recorded.</li>
-              <li>These events are provided as context for human review.</li>
-            </ul>
+        <div className="w-full max-w-md rounded-3xl border border-cyber-500/30 bg-cyber-500/10 p-8 text-center shadow-2xl backdrop-blur-md">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-cyber-500/20 text-cyber-400">
+            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
           </div>
+          <h2 className="mb-2 text-2xl font-bold text-white">Assessment Ready</h2>
+          <p className="mb-8 text-white/70">
+            Please enter fullscreen to continue your assessment. The timer is running.
+          </p>
           <button onClick={handleStart} className="btn-primary w-full py-4 text-lg">
-            Start Assessment
+            Enter Fullscreen
           </button>
         </div>
       </div>
@@ -763,7 +953,96 @@ export default function AssessmentEngine({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-navy-950">
+    <div className="flex min-h-screen flex-col bg-navy-950 relative">
+      
+      {/* ── Watermark ───────────────────────────────── */}
+      <div className="pointer-events-none fixed inset-0 z-[40] flex flex-wrap items-center justify-center gap-12 overflow-hidden opacity-[0.03] mix-blend-overlay">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <span key={i} className="rotate-[-20deg] select-none text-2xl font-bold uppercase tracking-widest text-white whitespace-nowrap">
+            {candidateId} • ASSESSMENT COPY
+          </span>
+        ))}
+      </div>
+
+      {/* ── Modals ──────────────────────────────────── */}
+      {isLocked ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-950/95 p-6 backdrop-blur-xl">
+          <div className="w-full max-w-lg rounded-3xl border border-red-500/30 bg-red-500/10 p-8 text-center shadow-2xl">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-500/20 text-red-500">
+              <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h2 className="mb-2 text-2xl font-bold text-white">ASSESSMENT TEMPORARILY LOCKED</h2>
+            <p className="mb-8 text-red-200">
+              Multiple assessment integrity violations have been detected.
+              Your assessment has been temporarily locked and the activity has been recorded.
+              Please contact the training coordinator.
+            </p>
+          </div>
+        </div>
+      ) : strikeWarningData ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-navy-950/90 p-6 backdrop-blur-md">
+          <div className="w-full max-w-lg rounded-3xl border border-amber-500/30 bg-amber-500/10 p-8 text-center shadow-2xl">
+            <h2 className="mb-2 text-2xl font-bold text-amber-500">INTEGRITY WARNING — {strikeWarningData.strike} OF 3</h2>
+            <p className="mb-8 text-amber-200">
+              {strikeWarningData.strike === 2 
+                ? "Another assessment integrity violation has been detected. One more detected violation will temporarily lock this assessment. Please remain in fullscreen and stay on the assessment." 
+                : "An assessment integrity event has been detected. Please remain in fullscreen and stay focused on the assessment. This activity has been recorded."}
+            </p>
+            {strikeWarningData.remaining > 0 ? (
+              <div className="text-4xl font-mono font-bold text-white">
+                {strikeWarningData.remaining}
+              </div>
+            ) : (
+              <button
+                onClick={async () => {
+                  try {
+                    if (document.documentElement.requestFullscreen) {
+                      await document.documentElement.requestFullscreen();
+                    } else {
+                      setStrikeWarningData(null); // Just dismiss if not supported
+                    }
+                  } catch {
+                    setIntegrityWarning('Fullscreen could not be restored.');
+                    setTimeout(() => setIntegrityWarning(''), 3000);
+                  }
+                }}
+                className="btn-primary w-full py-4 text-lg"
+              >
+                Return to Fullscreen
+              </button>
+            )}
+          </div>
+        </div>
+      ) : graceOverlay ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-navy-950/90 p-6 backdrop-blur-md">
+          <div className="w-full max-w-lg rounded-3xl border border-blue-500/30 bg-blue-500/10 p-8 text-center shadow-2xl">
+            <h2 className="mb-2 text-2xl font-bold text-white">FULLSCREEN EXITED</h2>
+            <p className="mb-8 text-blue-200">
+              Please return to fullscreen to continue the assessment.
+            </p>
+            <div className="mb-8 text-5xl font-mono font-bold text-white">
+              {graceOverlay.remaining}
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  if (document.documentElement.requestFullscreen) {
+                    await document.documentElement.requestFullscreen();
+                  }
+                } catch {
+                  setIntegrityWarning('Fullscreen could not be restored. Please use the button again.');
+                  setTimeout(() => setIntegrityWarning(''), 3000);
+                }
+              }}
+              className="btn-primary w-full py-4 text-lg"
+            >
+              Return to Fullscreen
+            </button>
+          </div>
+        </div>
+      ) : null}
       {integrityWarning && (
         <div className="fixed inset-x-0 top-16 z-[70] flex justify-center p-4">
           <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-5 py-3 text-sm font-medium text-amber-400 shadow-2xl backdrop-blur-md transition-all">
@@ -780,7 +1059,15 @@ export default function AssessmentEngine({
             <span className="type-label hidden truncate font-medium text-white sm:block">
               {candidateName}
             </span>
-            <span className="font-mono text-xs text-cyber-400">{candidateId}</span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs text-cyber-400">{candidateId}</span>
+              <span className="hidden sm:inline-block rounded bg-cyber-500/20 px-1.5 py-0.5 text-[10px] font-bold tracking-widest text-cyber-400 border border-cyber-500/30">
+                EXAM MODE ACTIVE
+              </span>
+              <span className="hidden sm:inline-block rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold tracking-widest text-amber-400 border border-amber-500/30">
+                INTEGRITY: {strikeCount}/3
+              </span>
+            </div>
           </div>
 
           {/* Timer */}
@@ -813,7 +1100,8 @@ export default function AssessmentEngine({
       </header>
 
       {/* ── Main Content ──────────────────────────────── */}
-      <main className="container-main flex-1 pb-16 pt-36">
+      {!isLocked && (
+        <main className="container-main relative z-50 flex-1 pb-16 pt-36">
         {currentSection === 'final_review' ? (
           <FinalReview
             answers={answers}
@@ -868,6 +1156,7 @@ export default function AssessmentEngine({
               onCopy={currentSection !== 'written' ? handleCopy : undefined}
               onCut={currentSection !== 'written' ? handleCut : undefined}
               onContextMenu={handleContextMenu}
+              onDragStart={handleDragStart}
             >
               {/* Left Column: Questions */}
               <div className="flex-1 space-y-6">
@@ -974,7 +1263,8 @@ export default function AssessmentEngine({
             {submitError}
           </p>
         )}
-      </main>
+        </main>
+      )}
     </div>
   );
 }

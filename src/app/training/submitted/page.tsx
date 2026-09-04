@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { verifySessionToken } from '@/lib/session';
@@ -32,6 +33,9 @@ export default async function SubmittedPage() {
           Candidate.findOne({ candidateId: cid }).lean(),
           Assessment.findOne({ candidateId: cid }, { submittedAt: 1, completionStatus: 1 }).lean(),
         ]);
+        if (assessment?.integrityLockStatus === 'locked') {
+          redirect(`/training/assessment`);
+        }
         if (candidate) candidateName = String(candidate.fullName);
         if (assessment?.submittedAt) {
           submittedAt = new Date(assessment.submittedAt).toLocaleString('en-IN', {

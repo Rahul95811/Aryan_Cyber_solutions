@@ -13,11 +13,11 @@ export const MCQ_ANSWER_KEYS: Record<string, number> = {
   // ── Section A: Computer Networks ──
   n01: 2, // C — Transport Layer (Layer 4)
   n02: 2, // C — UDP has lower overhead
-  n03: 1, // B — broadcast 192.168.10.63 (/26 block 0–63)
+  n03: 1, // B — ACK → ESTABLISHED state
   n04: 1, // B — Browser → ISP Resolver → Root → TLD → Authoritative
   n05: 1, // B — ARPs for the default gateway MAC
-  n06: 1, // B — ACK → ESTABLISHED state
-  n07: 2, // C — NAT device using its translation table
+  n06: 2, // C — NAT device using its translation table
+  n07: 1, // B — broadcast 192.168.10.63 (/26 block 0–63)
   n08: 1, // B — server not running or bound to 127.0.0.1
   n09: 0, // A — ARP poisoning / MITM
   n10: 1, // B — without HSTS, downgrade attack possible
@@ -29,8 +29,8 @@ export const MCQ_ANSWER_KEYS: Record<string, number> = {
   l04: 2, // C — find /home/student/ -name "*.sh"
   l05: 2, // C — filters nginx lines, removes grep process from output
   l06: 1, // B — owner rwx, group rx, others rx (755)
-  l07: 2, // C — top
-  l08: 2, // C — "not found" (stderr silenced, cat exits non-zero, || fires)
+  l07: 0, // A — cron environment lacks PATH variables
+  l08: 2, // C — "not found"
   l09: 1, // B — chmod o+x scan.sh
   l10: 1, // B — rm -rf deletes without prompt, no output on success
 };

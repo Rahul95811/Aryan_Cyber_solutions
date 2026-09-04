@@ -15,7 +15,13 @@ const registerSchema = z.object({
   collegeEmail:   z.string().email('Valid college email is required'),
   collegeName:    z.string().min(3, 'College / institution name is required'),
   rollNumber:     z.string().min(1, 'Roll number is required'),
-  phone:          z.string().regex(/^\+\d{11,15}$/, 'Enter a valid 10-digit mobile number'),
+  phone:          z.preprocess((val) => {
+    let p = String(val).replace(/\D/g, '');
+    if (p.length === 10) return `+91${p}`;
+    if (p.length === 12 && p.startsWith('91')) return `+${p}`;
+    if (p.length === 11 && p.startsWith('0')) return `+91${p.slice(1)}`;
+    return val; // Allow the regex to fail anything that doesn't match the strict canonical form
+  }, z.string().regex(/^\+91\d{10}$/, 'Enter a valid 10-digit Indian mobile number')),
   yearOfStudy:    z.string().min(1, 'Year of study is required'),
   areaOfInterest: z.string().optional(),
 });
@@ -132,10 +138,10 @@ export async function POST(request: NextRequest) {
     const token = await createSessionToken(candidateId);
 
     // Send confirmation email
-    const resendApiKey = process.env.ACS_RESEND_API_KEY || process.env.RESEND_API_KEY;
+    const resendApiKey = process.env.ACS_RESEND_API_KEY;
     if (resendApiKey) {
       const resend = new Resend(resendApiKey);
-      const fromRaw = (process.env.ACS_RESEND_FROM_EMAIL ?? process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev').replace(/^["']|["']$/g, '');
+      const fromRaw = (process.env.ACS_RESEND_FROM_EMAIL ?? 'onboarding@resend.dev').replace(/^["']|["']$/g, '');
       const angleMatch = fromRaw.match(/<([^>]+)>/);
       const fromAddr = angleMatch?.[1] ?? fromRaw;
       const from = `Aryan Cyber Solutions <${fromAddr}>`;

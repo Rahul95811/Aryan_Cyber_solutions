@@ -24,7 +24,8 @@ export interface WrittenAnswer {
 }
 
 export interface IntegrityEvent {
-  type: 'tab_hidden' | 'tab_visible' | 'copy_attempt' | 'cut_attempt' | 'paste_attempt' | 'fullscreen_exit' | 'context_menu';
+  eventId?: string;
+  type: 'tab_hidden' | 'tab_visible' | 'copy_attempt' | 'cut_attempt' | 'paste_attempt' | 'fullscreen_exit' | 'context_menu' | 'print_attempt' | 'save_attempt' | 'navigation_attempt' | 'drag_attempt' | 'screen_capture_attempt' | 'screenshot_shortcut_attempt' | 'integrity_strike' | 'fullscreen_grace_expired' | 'absence' | 'absence_returned' | 'grace_period_used';
   timestamp: string;
   durationMs?: number; // only for tab_hidden if applicable
 }
@@ -58,8 +59,22 @@ export interface IAssessment extends Document {
   tab_switch_count?: number;
   total_away_time_ms?: number;
   copy_attempt_count?: number;
+  cut_attempt_count?: number;
   paste_attempt_count?: number;
+  print_attempt_count?: number;
+  save_attempt_count?: number;
+  navigation_attempt_count?: number;
+  drag_attempt_count?: number;
   fullscreen_exit_count?: number;
+  screen_capture_attempt_count?: number;
+  screenshot_shortcut_attempt_count?: number;
+  fullscreen_grace_expired_count?: number;
+  integrity_strike_count?: number;
+  // ── Lock State ───────────────────────
+  integrityStrikeCount?: number;
+  integrityLockStatus?: 'none' | 'locked';
+  integrityLockedAt?: Date;
+  integrityLockReason?: string;
 }
 
 const AssessmentSchema = new Schema<IAssessment>(
@@ -104,8 +119,21 @@ const AssessmentSchema = new Schema<IAssessment>(
     tab_switch_count: { type: Number, default: 0 },
     total_away_time_ms: { type: Number, default: 0 },
     copy_attempt_count: { type: Number, default: 0 },
+    cut_attempt_count: { type: Number, default: 0 },
     paste_attempt_count: { type: Number, default: 0 },
+    print_attempt_count: { type: Number, default: 0 },
+    save_attempt_count: { type: Number, default: 0 },
+    navigation_attempt_count: { type: Number, default: 0 },
+    drag_attempt_count: { type: Number, default: 0 },
     fullscreen_exit_count: { type: Number, default: 0 },
+    screen_capture_attempt_count: { type: Number, default: 0 },
+    screenshot_shortcut_attempt_count: { type: Number, default: 0 },
+    fullscreen_grace_expired_count: { type: Number, default: 0 },
+    integrity_strike_count: { type: Number, default: 0 },
+    integrityStrikeCount: { type: Number, default: 0 },
+    integrityLockStatus: { type: String, enum: ['none', 'locked'], default: 'none' },
+    integrityLockedAt: { type: Date },
+    integrityLockReason: { type: String },
   },
   { timestamps: true }
 );

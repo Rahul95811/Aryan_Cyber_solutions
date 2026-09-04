@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { connectDB } from '@/lib/db';
 import Assessment from '@/lib/models/Assessment';
 import Candidate from '@/lib/models/Candidate';
+import { rateLimit } from '@/lib/rate-limit';
 import { scoreMCQ, MCQ_ANSWER_KEYS } from '@/lib/server-questions';
 import { networkQuestions, linuxQuestions, writtenQuestions } from '@/lib/questions';
 import { companyInfo } from '@/lib/data';
@@ -12,11 +13,6 @@ const submitSchema = z.object({
   mcqAnswers: z.record(z.string(), z.number().min(0).max(3)).optional(),
   writtenAnswers: z.record(z.string(), z.string().max(5000)).optional(),
   autoSubmit: z.boolean().optional().default(false),
-  integrityEvents: z.array(z.object({
-    type: z.enum(['tab_hidden', 'tab_visible', 'copy_attempt', 'cut_attempt', 'paste_attempt', 'fullscreen_exit', 'context_menu']),
-    timestamp: z.string(),
-    durationMs: z.number().optional(),
-  })).optional(),
 });
 
 function escapeHtml(s: string) {
@@ -40,13 +36,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limit: 5 requests per minute per candidate
+    const { success } = await rateLimit(`submit_${candidateId}`, 5, 60);
+    if (!success) {
+      return NextResponse.json({ message: 'Too many requests' }, { status: 429 });
+    }
+
     const body = await request.json();
     const result = submitSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json({ message: 'Invalid payload' }, { status: 400 });
     }
 
-    const { mcqAnswers, writtenAnswers, autoSubmit, integrityEvents } = result.data;
+    const { mcqAnswers, writtenAnswers, autoSubmit } = result.data;
 
     await connectDB();
 
@@ -58,12 +60,15 @@ export async function POST(request: NextRequest) {
     if (!candidate) return NextResponse.json({ message: 'Candidate not found' }, { status: 404 });
     if (!assessment) return NextResponse.json({ message: 'Assessment not found' }, { status: 404 });
 
-    // Prevent double submission
     if (
       assessment.completionStatus === 'submitted' ||
       assessment.completionStatus === 'timeout'
     ) {
       return NextResponse.json({ message: 'Assessment already submitted', candidateId }, { status: 409 });
+    }
+
+    if (assessment.integrityLockStatus === 'locked') {
+      return NextResponse.json({ message: 'Assessment is locked and cannot be submitted' }, { status: 403 });
     }
 
     if (!assessment.startedAt) {
@@ -116,15 +121,24 @@ export async function POST(request: NextRequest) {
 
     const submittedAt = new Date();
 
-    // ── Integrity aggregates ──────────────────────────────────────────
-    const events = integrityEvents ?? [];
-    const tab_switch_count = events.filter(e => e.type === 'tab_hidden').length;
+    // ── Integrity aggregates (From Database) ─────────────────────────
+    const events = assessment.integrityEvents ?? [];
+    const tab_switch_count = events.filter((e: any) => e.type === 'tab_hidden').length;
     const total_away_time_ms = events
-      .filter(e => e.type === 'tab_hidden' && e.durationMs)
-      .reduce((sum, e) => sum + (e.durationMs || 0), 0);
-    const copy_attempt_count = events.filter(e => e.type === 'copy_attempt').length;
-    const paste_attempt_count = events.filter(e => e.type === 'paste_attempt').length;
-    const fullscreen_exit_count = events.filter(e => e.type === 'fullscreen_exit').length;
+      .filter((e: any) => e.type === 'tab_hidden' && e.durationMs)
+      .reduce((sum: number, e: any) => sum + (e.durationMs || 0), 0);
+    const copy_attempt_count = events.filter((e: any) => e.type === 'copy_attempt').length;
+    const cut_attempt_count = events.filter((e: any) => e.type === 'cut_attempt').length;
+    const paste_attempt_count = events.filter((e: any) => e.type === 'paste_attempt').length;
+    const print_attempt_count = events.filter((e: any) => e.type === 'print_attempt').length;
+    const save_attempt_count = events.filter((e: any) => e.type === 'save_attempt').length;
+    const navigation_attempt_count = events.filter((e: any) => e.type === 'navigation_attempt').length;
+    const drag_attempt_count = events.filter((e: any) => e.type === 'drag_attempt').length;
+    const fullscreen_exit_count = events.filter((e: any) => e.type === 'fullscreen_exit').length;
+    const screen_capture_attempt_count = events.filter((e: any) => e.type === 'screen_capture_attempt').length;
+    const screenshot_shortcut_attempt_count = events.filter((e: any) => e.type === 'screenshot_shortcut_attempt').length;
+    const fullscreen_grace_expired_count = events.filter((e: any) => e.type === 'fullscreen_grace_expired').length;
+    const integrity_strike_count = assessment.integrityStrikeCount ?? 0;
 
     await Assessment.updateOne(
       { candidateId },
@@ -140,30 +154,33 @@ export async function POST(request: NextRequest) {
           writtenAnswers:    writtenAnswerDocs,
           reviewStatus:      'pending',
           finalResult:       'pending',
-          integrityEvents:   events,
           tab_switch_count,
           total_away_time_ms,
           copy_attempt_count,
+          cut_attempt_count,
           paste_attempt_count,
+          print_attempt_count,
+          save_attempt_count,
+          navigation_attempt_count,
+          drag_attempt_count,
           fullscreen_exit_count,
+          screen_capture_attempt_count,
+          screenshot_shortcut_attempt_count,
+          fullscreen_grace_expired_count,
+          integrity_strike_count,
           draftAnswers:      null, // clear draft on submission
         },
       }
     );
 
     // ── Confirmation emails ───────────────────────────────────────────
-    const resendApiKey = process.env.ACS_RESEND_API_KEY || process.env.RESEND_API_KEY;
+    const resendApiKey = process.env.ACS_RESEND_API_KEY;
     if (resendApiKey) {
       const resend = new Resend(resendApiKey);
-      const fromRaw = (process.env.ACS_RESEND_FROM_EMAIL ?? process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev').replace(/^["']|["']$/g, '');
+      const fromRaw = (process.env.ACS_RESEND_FROM_EMAIL ?? 'onboarding@resend.dev').replace(/^["']|["']$/g, '');
       const angleMatch = fromRaw.match(/<([^>]+)>/);
       const from = `Aryan Cyber Solutions <${angleMatch?.[1] ?? fromRaw}>`;
-      const adminEmail =
-        process.env.ACS_TRAINING_ADMIN_EMAIL ??
-        process.env.TRAINING_ADMIN_EMAIL ??
-        process.env.ACS_CONTACT_TO_EMAIL ??
-        process.env.CONTACT_TO_EMAIL ??
-        companyInfo.contactEmail;
+      const adminEmail = process.env.ACS_TRAINING_ADMIN_EMAIL ?? process.env.ACS_CONTACT_TO_EMAIL ?? companyInfo.contactEmail;
 
       // ── Candidate: simple acknowledgement ──
       resend.emails.send({
@@ -224,18 +241,26 @@ export async function POST(request: NextRequest) {
               <tr style="background:#0f172a"><td style="padding:8px 12px;color:#9ca3af">Submitted</td><td style="padding:8px 12px">${submittedAt.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td></tr>
             </table>
 
-            <div style="background:#1e1e2d;padding:16px;border-radius:8px;border:1px solid ${events.length > 0 ? '#b91c1c' : '#059669'};margin-bottom:20px">
+            <div style="background:#1e1e2d;padding:16px;border-radius:8px;border:1px solid ${(assessment.integrityStrikeCount ?? 0) >= 3 ? '#ef4444' : events.length > 0 ? '#b91c1c' : '#059669'};margin-bottom:20px">
               <h2 style="font-size:16px;margin:0 0 12px;color:#fff">ASSESSMENT INTEGRITY</h2>
+              <div style="margin-bottom:12px;color:#ef4444;font-weight:bold;font-size:14px">
+                Integrity strikes: ${assessment.integrityStrikeCount ?? integrity_strike_count} / 3
+              </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;color:#d1d5db">
                 <div>Tab switches: <strong>${tab_switch_count}</strong></div>
                 <div>Away time: <strong>${Math.round(total_away_time_ms / 1000)}s</strong></div>
-                <div>Copy attempts: <strong>${copy_attempt_count}</strong></div>
-                <div>Paste attempts: <strong>${paste_attempt_count}</strong></div>
                 <div>Fullscreen exits: <strong>${fullscreen_exit_count}</strong></div>
-                <div>Total events: <strong>${events.length}</strong></div>
+                <div>Fullscreen grace expiries: <strong>${fullscreen_grace_expired_count}</strong></div>
+                <div>Screen capture attempts: <strong>${screen_capture_attempt_count}</strong></div>
+                <div>Screenshot shortcut attempts: <strong>${screenshot_shortcut_attempt_count}</strong></div>
+                <div>Copy attempts: <strong>${copy_attempt_count}</strong></div>
+                <div>Cut attempts: <strong>${cut_attempt_count}</strong></div>
+                <div>Paste attempts: <strong>${paste_attempt_count}</strong></div>
+                <div>Print attempts: <strong>${print_attempt_count}</strong></div>
+                <div>Navigation attempts: <strong>${navigation_attempt_count}</strong></div>
               </div>
               <div style="margin-top:12px;padding-top:12px;border-top:1px solid #334155;font-size:13px">
-                Status: <strong>${events.length > 5 ? 'Review Recommended' : 'Normal'}</strong>
+                Status: <strong>${(assessment.integrityStrikeCount ?? 0) >= 3 ? 'ASSESSMENT LOCKED' : events.length > 5 ? 'Review Recommended' : 'Normal'}</strong>
               </div>
             </div>
 

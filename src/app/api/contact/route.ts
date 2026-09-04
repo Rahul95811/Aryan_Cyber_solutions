@@ -7,18 +7,14 @@ import { z } from "zod";
  * Resend is used solely to deliver admin notifications and acknowledgements.
  */
 import { companyInfo } from "@/lib/data";
+import { rateLimit } from "@/lib/rate-limit";
 
 const BRAND_FROM_NAME = "Aryan Cyber Solutions";
 const DEFAULT_FROM_ADDRESS = "onboarding@resend.dev";
 const ADMIN_EMAIL = "contact@sriaryan.com";
 
 function resolveFromAddress(): string {
-  const raw = (
-    process.env.ACS_RESEND_FROM_EMAIL ||
-    process.env.RESEND_FROM_EMAIL ||
-    process.env.FROM_EMAIL ||
-    DEFAULT_FROM_ADDRESS
-  )
+  const raw = (process.env.ACS_RESEND_FROM_EMAIL || process.env.ACS_FROM_EMAIL || DEFAULT_FROM_ADDRESS)
     .trim()
     .replace(/^["']|["']$/g, "");
 
@@ -79,16 +75,27 @@ function zodErrors(error: z.ZodError): Record<string, string> {
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown-ip';
+    
+    // 3 requests per IP per hour
+    const { success } = await rateLimit(`contact_${ip}`, 3, 3600);
+    if (!success) {
+      return NextResponse.json(
+        { message: 'Too many contact requests from this network. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const formData = await request.formData();
     const type = String(formData.get("type") || "");
 
-    const resendApiKey = process.env.ACS_RESEND_API_KEY || process.env.RESEND_API_KEY;
-    const adminEmail = process.env.ACS_CONTACT_TO_EMAIL || process.env.CONTACT_TO_EMAIL || process.env.CONTACT_EMAIL || ADMIN_EMAIL;
+    const resendApiKey = process.env.ACS_RESEND_API_KEY;
+    const adminEmail = process.env.ACS_CONTACT_TO_EMAIL || ADMIN_EMAIL;
     const fromEmail = resolveFromAddress();
     const submittedAt = formatDateTime(new Date());
 
     if (!resendApiKey) {
-      console.error("ACS_RESEND_API_KEY / RESEND_API_KEY is not configured");
+      console.error("RESEND_API_KEY is not configured");
       return NextResponse.json(
         { message: "Email service is not configured. Please contact us directly." },
         { status: 503 }

@@ -62,12 +62,36 @@ export default async function AssessmentPage() {
     ? { mcq: draft.mcq ?? {}, written: draft.written ?? {} }
     : null;
 
+  if (assessment.integrityLockStatus === 'locked') {
+    return (
+      <div className="flex min-h-screen flex-col bg-navy-950 relative">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-950/95 p-6 backdrop-blur-xl">
+          <div className="w-full max-w-lg rounded-3xl border border-red-500/30 bg-red-500/10 p-8 text-center shadow-2xl">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-500/20 text-red-500">
+              <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h2 className="mb-2 text-2xl font-bold text-white">ASSESSMENT TEMPORARILY LOCKED</h2>
+            <p className="mb-8 text-red-200">
+              Multiple assessment integrity violations have been detected.
+              Your assessment has been temporarily locked and the activity has been recorded.
+              Please contact the training coordinator.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AssessmentEngine
       candidateId={cid}
       candidateName={String(candidate.fullName)}
       deadlineTimestamp={alreadyExpired ? now - 1000 : deadlineTimestamp}
       initialDraft={initialDraft}
+      initialStrikeCount={assessment.integrityStrikeCount ?? 0}
+      initialLockStatus={false}
     />
   );
 }
