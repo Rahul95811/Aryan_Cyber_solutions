@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
           $set: { 
             integrityLockStatus: 'locked', 
             integrityLockedAt: new Date(), 
-            integrityLockedReason: '3 integrity strikes exceeded' 
+            integrityLockReason: '3 integrity strikes exceeded' 
           } 
         },
         { new: true }

@@ -43,6 +43,10 @@ export default async function RulesPage() {
     redirect(`/training/assessment`);
   }
 
+  if (assessment.startedAt && assessment.completionStatus === 'in_progress') {
+    redirect(`/training/assessment`);
+  }
+
   return (
     <div className="min-h-screen bg-navy-950 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
