@@ -20,11 +20,11 @@ export default function Footer() {
           <div className="lg:col-span-1">
             <Link href="/" className="mb-4 flex items-center gap-3">
               <Image
-                src="/logo.jpeg"
+                src="/logo.png"
                 alt="Aryan Cyber Solutions"
-                width={36}
-                height={36}
-                className="rounded-lg"
+                width={38}
+                height={38}
+                className="rounded object-contain"
               />
               <span className="type-label font-semibold">Aryan Cyber Solutions</span>
             </Link>

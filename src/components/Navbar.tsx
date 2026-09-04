@@ -48,11 +48,11 @@ export default function Navbar() {
       <nav className="container-main flex h-14 items-center justify-between lg:h-16">
         <Link href="/" className="flex items-center gap-2.5">
           <Image
-            src="/logo.jpeg"
+            src="/logo.png"
             alt="Aryan Cyber Solutions"
-            width={32}
-            height={32}
-            className="rounded"
+            width={36}
+            height={36}
+            className="rounded object-contain"
             priority
           />
           <span className="type-nav hidden font-semibold tracking-tight text-white sm:block">
