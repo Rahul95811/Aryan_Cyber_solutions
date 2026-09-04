@@ -44,6 +44,7 @@ function escapeHtml(s: string) {
 }
 
 export async function POST(request: NextRequest) {
+  let bodyData: any = null;
   try {
     const forwarded = request.headers.get('x-forwarded-for');
     const ip = (forwarded ? forwarded.split(',')[0].trim() : null) ??
@@ -63,8 +64,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const result = registerSchema.safeParse(body);
+    try {
+      bodyData = await request.json();
+    } catch {
+      return NextResponse.json(
+        { message: 'Invalid JSON request' },
+        { status: 400 }
+      );
+    }
+
+    const result = registerSchema.safeParse(bodyData);
 
     if (!result.success) {
       return NextResponse.json(
@@ -181,33 +190,37 @@ export async function POST(request: NextRequest) {
     // Send confirmation email
     const resendApiKey = process.env.ACS_RESEND_API_KEY;
     if (resendApiKey) {
-      const resend = new Resend(resendApiKey);
-      const fromRaw = (process.env.ACS_RESEND_FROM_EMAIL ?? 'onboarding@resend.dev').replace(/^["']|["']$/g, '');
-      const angleMatch = fromRaw.match(/<([^>]+)>/);
-      const fromAddr = angleMatch?.[1] ?? fromRaw;
-      const from = `Aryan Cyber Solutions <${fromAddr}>`;
+      try {
+        const resend = new Resend(resendApiKey);
+        const fromRaw = (process.env.ACS_RESEND_FROM_EMAIL ?? 'onboarding@resend.dev').replace(/^["']|["']$/g, '');
+        const angleMatch = fromRaw.match(/<([^>]+)>/);
+        const fromAddr = angleMatch?.[1] ?? fromRaw;
+        const from = `Aryan Cyber Solutions <${fromAddr}>`;
 
-      await resend.emails.send({
-        from,
-        to: personalEmail,
-        subject: `Registration Confirmed — Your Candidate ID: ${candidateId}`,
-        html: `
-          <p>Hello ${escapeHtml(fullName)},</p>
-          <p>You have successfully registered for the Aryan Cyber Solutions Entry Assessment.</p>
-          <p><strong>Your Candidate ID: <code>${escapeHtml(candidateId)}</code></strong></p>
-          <p>Please save this ID — you will need it to access your assessment status.</p>
-          <hr />
-          <p><strong>Assessment Details</strong></p>
-          <ul>
-            <li>Duration: 45 minutes</li>
-            <li>30 questions across 3 sections (Networks, Linux, Written Responses)</li>
-            <li>Must be completed in a single session</li>
-          </ul>
-          <p>Once you are ready, return to the website and proceed to the Rules page to begin.</p>
-          <br />
-          <p>Regards,<br />Aryan Cyber Solutions<br />${escapeHtml(companyInfo.contactEmail)}</p>
-        `,
-      }).catch(() => { /* non-blocking — registration already saved */ });
+        await resend.emails.send({
+          from,
+          to: personalEmail,
+          subject: `Registration Confirmed — Your Candidate ID: ${candidateId}`,
+          html: `
+            <p>Hello ${escapeHtml(fullName)},</p>
+            <p>You have successfully registered for the Aryan Cyber Solutions Entry Assessment.</p>
+            <p><strong>Your Candidate ID: <code>${escapeHtml(candidateId)}</code></strong></p>
+            <p>Please save this ID — you will need it to access your assessment status.</p>
+            <hr />
+            <p><strong>Assessment Details</strong></p>
+            <ul>
+              <li>Duration: 45 minutes</li>
+              <li>30 questions across 3 sections (Networks, Linux, Written Responses)</li>
+              <li>Must be completed in a single session</li>
+            </ul>
+            <p>Once you are ready, return to the website and proceed to the Rules page to begin.</p>
+            <br />
+            <p>Regards,<br />Aryan Cyber Solutions<br />${escapeHtml(companyInfo.contactEmail)}</p>
+          `,
+        });
+      } catch (emailErr) {
+        console.error('[training/register] confirmation email error:', emailErr);
+      }
     }
 
     // Set cookie and return success
@@ -221,13 +234,13 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch (error: unknown) {
-    console.error('[training/register]', error);
+  } catch (error: any) {
+    console.error('[training/register error]', error);
+
     // Handle MongoDB duplicate key error gracefully
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: number }).code === 11000) {
+    if (error && (error.code === 11000 || String(error.message || '').includes('E11000'))) {
       try {
-        const body = await request.json().catch(() => ({}));
-        const pEmail = body.personalEmail ? String(body.personalEmail).toLowerCase() : '';
+        const pEmail = bodyData?.personalEmail ? String(bodyData.personalEmail).toLowerCase() : '';
         if (pEmail) {
           const candidate = await Candidate.findOne({ personalEmail: pEmail });
           if (candidate) {
@@ -246,16 +259,17 @@ export async function POST(request: NextRequest) {
             return response;
           }
         }
-      } catch {
-        // Fallback
+      } catch (resumeErr) {
+        console.error('[training/register resume error]', resumeErr);
       }
       return NextResponse.json(
         { message: 'An application already exists for this email address.' },
         { status: 409 }
       );
     }
+
     return NextResponse.json(
-      { message: 'Registration failed. Please try again.' },
+      { message: error?.message || 'Registration failed. Please try again.' },
       { status: 500 }
     );
   }

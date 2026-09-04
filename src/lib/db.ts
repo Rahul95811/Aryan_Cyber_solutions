@@ -12,10 +12,10 @@ const cached = global._mongooseCache ?? { conn: null, promise: null };
 global._mongooseCache = cached;
 
 export async function connectDB(): Promise<typeof mongoose> {
-  const MONGODB_URI = process.env.MONGODB_URI;
+  const MONGODB_URI = process.env.ACS_MONGODB_URI || process.env.MONGODB_URI;
 
   if (!MONGODB_URI) {
-    throw new Error('Please define the MONGODB_URI environment variable in .env.local');
+    throw new Error('Please define the MONGODB_URI environment variable in .env.local or environment settings');
   }
 
   if (cached.conn) return cached.conn;
