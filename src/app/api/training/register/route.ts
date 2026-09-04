@@ -45,19 +45,20 @@ function escapeHtml(s: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown-ip';
-    
-    // Configurable rate limit for dev/testing, production default 5
-    const isDev = process.env.NODE_ENV !== 'production';
-    const defaultLimit = isDev ? 50 : 5;
-    const rateLimitMax = process.env.TRAINING_REGISTER_RATE_LIMIT 
-      ? parseInt(process.env.TRAINING_REGISTER_RATE_LIMIT, 10) 
-      : defaultLimit;
-    
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = (forwarded ? forwarded.split(',')[0].trim() : null) ??
+      request.headers.get('x-real-ip') ??
+      'unknown-ip';
+
+    // Campus-friendly rate limit (200 requests/hour per IP for shared campus Wi-Fi)
+    const rateLimitMax = process.env.ACS_TRAINING_REGISTER_RATE_LIMIT || process.env.TRAINING_REGISTER_RATE_LIMIT
+      ? parseInt((process.env.ACS_TRAINING_REGISTER_RATE_LIMIT || process.env.TRAINING_REGISTER_RATE_LIMIT)!, 10)
+      : 200;
+
     const { success } = await rateLimit(`register_${ip}`, rateLimitMax, 3600);
     if (!success) {
       return NextResponse.json(
-        { message: 'Too many registration attempts from this network. Please try again later.' },
+        { message: 'Too many registration attempts from this network. Please try again in a few minutes.' },
         { status: 429 }
       );
     }
@@ -77,24 +78,64 @@ export async function POST(request: NextRequest) {
       collegeName, rollNumber, phone, yearOfStudy, areaOfInterest,
     } = result.data;
 
-    if (personalEmail.toLowerCase() === collegeEmail.toLowerCase()) {
-      return NextResponse.json(
-        { message: 'Validation failed', errors: { collegeEmail: 'College email must differ from personal email' } },
-        { status: 400 }
-      );
-    }
-
     await connectDB();
 
-    const cohortYear = parseInt(process.env.TRAINING_COHORT_YEAR ?? String(new Date().getFullYear()), 10);
+    const cohortYear = parseInt(
+      process.env.ACS_TRAINING_COHORT_YEAR ?? process.env.TRAINING_COHORT_YEAR ?? String(new Date().getFullYear()),
+      10
+    );
 
-    // Duplicate check
-    const existing = await Candidate.findOne({ personalEmail: personalEmail.toLowerCase(), cohortYear });
+    // Check if candidate already exists in this cohort
+    const existing = await Candidate.findOne({
+      $or: [
+        { personalEmail: personalEmail.toLowerCase(), cohortYear },
+        { collegeEmail: collegeEmail.toLowerCase(), cohortYear },
+      ],
+    });
+
     if (existing) {
-      return NextResponse.json(
-        { message: 'An application already exists for this email address in the current cohort.', candidateId: existing.candidateId },
-        { status: 409 }
+      const existingAssessment = await Assessment.findOne({ candidateId: existing.candidateId });
+
+      // If candidate already submitted or timed out their assessment:
+      if (
+        existingAssessment &&
+        (existingAssessment.completionStatus === 'submitted' || existingAssessment.completionStatus === 'timeout')
+      ) {
+        return NextResponse.json(
+          {
+            message: 'An assessment has already been submitted for this email address in the current cohort.',
+            candidateId: existing.candidateId,
+          },
+          { status: 409 }
+        );
+      }
+
+      // If assessment is locked due to integrity violations:
+      if (existingAssessment && existingAssessment.integrityLockStatus === 'locked') {
+        return NextResponse.json(
+          {
+            message: 'Your assessment is currently locked due to integrity violations. Please contact the coordinator.',
+            candidateId: existing.candidateId,
+          },
+          { status: 403 }
+        );
+      }
+
+      // If candidate previously registered and assessment is still open, seamlessly resume session!
+      const token = await createSessionToken(existing.candidateId);
+      const response = NextResponse.json(
+        { candidateId: existing.candidateId, fullName: existing.fullName, isResumed: true },
+        { status: 200 }
       );
+      response.cookies.set('acs_session', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 4 * 60 * 60, // 4 hours
+        path: '/',
+      });
+
+      return response;
     }
 
     // Atomic candidate ID generation (with sync for existing DB)
@@ -107,7 +148,7 @@ export async function POST(request: NextRequest) {
         { $inc: { seq: 1 } },
         { returnDocument: 'after', upsert: true }
       );
-      
+
       const currentSeq = counter ? counter.seq : 1;
       candidateId = `ACS-${cohortYear}-${String(currentSeq).padStart(6, '0')}`;
       const exists = await Candidate.exists({ candidateId });
@@ -182,8 +223,32 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error: unknown) {
     console.error('[training/register]', error);
-    // Handle MongoDB duplicate key error
+    // Handle MongoDB duplicate key error gracefully
     if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: number }).code === 11000) {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const pEmail = body.personalEmail ? String(body.personalEmail).toLowerCase() : '';
+        if (pEmail) {
+          const candidate = await Candidate.findOne({ personalEmail: pEmail });
+          if (candidate) {
+            const token = await createSessionToken(candidate.candidateId);
+            const response = NextResponse.json(
+              { candidateId: candidate.candidateId, fullName: candidate.fullName, isResumed: true },
+              { status: 200 }
+            );
+            response.cookies.set('acs_session', token, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'strict',
+              maxAge: 4 * 60 * 60,
+              path: '/',
+            });
+            return response;
+          }
+        }
+      } catch {
+        // Fallback
+      }
       return NextResponse.json(
         { message: 'An application already exists for this email address.' },
         { status: 409 }

@@ -75,10 +75,16 @@ function zodErrors(error: z.ZodError): Record<string, string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'unknown-ip';
-    
-    // 3 requests per IP per hour
-    const { success } = await rateLimit(`contact_${ip}`, 3, 3600);
+    const forwarded = request.headers.get('x-forwarded-for');
+    const ip = (forwarded ? forwarded.split(',')[0].trim() : null) ??
+      request.headers.get('x-real-ip') ??
+      'unknown-ip';
+
+    const limit = process.env.ACS_CONTACT_RATE_LIMIT
+      ? parseInt(process.env.ACS_CONTACT_RATE_LIMIT, 10)
+      : 30;
+
+    const { success } = await rateLimit(`contact_${ip}`, limit, 3600);
     if (!success) {
       return NextResponse.json(
         { message: 'Too many contact requests from this network. Please try again later.' },
