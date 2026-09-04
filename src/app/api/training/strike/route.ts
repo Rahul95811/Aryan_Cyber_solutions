@@ -7,9 +7,9 @@ import { rateLimit } from '@/lib/rate-limit';
 const strikeSchema = z.object({
   eventId: z.string().uuid(),
   eventType: z.enum([
-    'tab_hidden', 'tab_visible', 'copy_attempt', 'cut_attempt', 'paste_attempt', 
-    'fullscreen_exit', 'context_menu', 'print_attempt', 'save_attempt', 
-    'navigation_attempt', 'drag_attempt', 'screen_capture_attempt', 
+    'tab_hidden', 'tab_visible', 'copy_attempt', 'cut_attempt', 'paste_attempt',
+    'fullscreen_exit', 'context_menu', 'print_attempt', 'save_attempt',
+    'navigation_attempt', 'drag_attempt', 'screen_capture_attempt',
     'screenshot_shortcut_attempt', 'integrity_strike', 'fullscreen_grace_expired',
     'absence', 'absence_returned', 'grace_period_used'
   ]),
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const result = strikeSchema.safeParse(body);
-    
+
     if (!result.success) {
       return NextResponse.json({ message: 'Invalid payload' }, { status: 400 });
     }
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     // 1. Atomically increment strike count and push the event.
     // The query filter ensures we don't process the same eventId twice (Replay Protection).
     let assessment = await Assessment.findOneAndUpdate(
-      { 
+      {
         candidateId,
         completionStatus: 'in_progress',
         integrityLockStatus: { $ne: 'locked' },
@@ -52,16 +52,16 @@ export async function POST(request: NextRequest) {
       },
       {
         $inc: { integrityStrikeCount: 1 },
-        $push: { 
-          integrityEvents: { 
-            $each: [{ 
-              eventId, 
-              type: eventType, 
-              timestamp, 
-              durationMs 
+        $push: {
+          integrityEvents: {
+            $each: [{
+              eventId,
+              type: eventType,
+              timestamp,
+              durationMs
             }],
             $slice: -500
-          } 
+          }
         }
       },
       { new: true } // Return the updated document
@@ -81,17 +81,17 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'Assessment already completed' }, { status: 409 });
       }
       if (existing.integrityLockStatus === 'locked') {
-        return NextResponse.json({ 
-          success: true, 
+        return NextResponse.json({
+          success: true,
           integrityStrikeCount: existing.integrityStrikeCount,
-          integrityLockStatus: 'locked' 
+          integrityLockStatus: 'locked'
         });
       }
       // If it exists, is in progress, and not locked, it must be a replay of the same eventId.
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         integrityStrikeCount: existing.integrityStrikeCount,
-        integrityLockStatus: existing.integrityLockStatus 
+        integrityLockStatus: existing.integrityLockStatus
       });
     }
 
@@ -99,12 +99,12 @@ export async function POST(request: NextRequest) {
     if ((assessment.integrityStrikeCount ?? 0) >= 3) {
       assessment = await Assessment.findOneAndUpdate(
         { candidateId },
-        { 
-          $set: { 
-            integrityLockStatus: 'locked', 
-            integrityLockedAt: new Date(), 
-            integrityLockReason: '3 integrity strikes exceeded' 
-          } 
+        {
+          $set: {
+            integrityLockStatus: 'locked',
+            integrityLockedAt: new Date(),
+            integrityLockedReason: '3 integrity strikes exceeded'
+          }
         },
         { new: true }
       );

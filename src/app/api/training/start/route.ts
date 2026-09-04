@@ -56,38 +56,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Assessment already submitted' }, { status: 409 });
     }
 
-    // Enforce Assessment Window only if explicitly enabled in environment settings
-    const shouldEnforceWindow =
-      process.env.ACS_ENFORCE_ASSESSMENT_WINDOW === 'true' ||
-      process.env.ENFORCE_ASSESSMENT_WINDOW === 'true';
+    // Enforce Assessment Window: 10:00 AM - 11:00 AM IST
+    const now = new Date();
+    const istTimeStr = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour12: false });
+    const currentIstHour = parseInt(istTimeStr.split(':')[0], 10) % 24;
 
-    if (shouldEnforceWindow) {
-      const now = new Date();
-      const istTimeStr = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour12: false });
-      const currentIstHour = parseInt(istTimeStr.split(':')[0], 10) % 24;
+    const accessStartHour = parseInt(process.env.ASSESSMENT_START_HOUR || '10', 10);
+    const accessEndHour = parseInt(process.env.ASSESSMENT_END_HOUR || '11', 10);
 
-      const accessStartHour = parseInt(
-        process.env.ACS_ASSESSMENT_START_HOUR || process.env.ASSESSMENT_START_HOUR || '10',
-        10
-      );
-      const accessEndHour = parseInt(
-        process.env.ACS_ASSESSMENT_END_HOUR || process.env.ASSESSMENT_END_HOUR || '11',
-        10
-      );
+    if (currentIstHour < accessStartHour) {
+      return NextResponse.json({ message: `Assessment has not started yet. The window opens at ${accessStartHour}:00 IST.` }, { status: 403 });
+    }
 
-      if (currentIstHour < accessStartHour) {
-        return NextResponse.json(
-          { message: `Assessment has not started yet. The window opens at ${accessStartHour}:00 IST.` },
-          { status: 403 }
-        );
-      }
-
-      if (currentIstHour >= accessEndHour) {
-        return NextResponse.json(
-          { message: `Assessment window closed at ${accessEndHour}:00 IST.` },
-          { status: 403 }
-        );
-      }
+    if (currentIstHour >= accessEndHour) {
+      return NextResponse.json({ message: `Assessment window closed at ${accessEndHour}:00 IST.` }, { status: 403 });
     }
 
     // Record start time server-side — this is the source of truth for the timer

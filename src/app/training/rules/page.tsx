@@ -43,12 +43,8 @@ export default async function RulesPage() {
     redirect(`/training/assessment`);
   }
 
-  if (assessment.startedAt && assessment.completionStatus === 'in_progress') {
-    redirect(`/training/assessment`);
-  }
-
   return (
-    <div className="min-h-screen bg-navy-950 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-navy-950 px-4 pt-24 pb-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         <Link
           href="/training"
@@ -87,7 +83,7 @@ export default async function RulesPage() {
         </header>
 
         <div className="space-y-12">
-          
+
           {/* ASSESSMENT STRUCTURE */}
           <section>
             <h2 className="mb-6 text-xl font-bold uppercase tracking-widest text-white">Assessment Overview</h2>
@@ -272,7 +268,7 @@ export default async function RulesPage() {
                 <strong>IMPORTANT:</strong> Browser-based assessments cannot completely prevent screenshots taken through external operating-system tools, another device, or hardware shortcuts. We use browser-level controls, detection, and audit logging to protect the assessment and provide integrity information for human review.
               </div>
             </div>
-            
+
             <div className="rounded-xl border border-white/10 bg-white/5 p-6 flex flex-col justify-between">
               <div>
                 <h3 className="mb-2 font-bold text-cyber-400">5-Second Grace Period</h3>
