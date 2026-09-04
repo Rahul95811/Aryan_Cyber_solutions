@@ -115,12 +115,12 @@ export default function TrainingPage() {
             ))}
           </div>
 
-          <Link href="/training/register" className="btn-primary">
-            Begin Assessment Registration
-            <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          <a href="#rules-and-requirements" className="btn-secondary inline-flex items-center gap-2">
+            Review Rules & Process
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
-          </Link>
+          </a>
         </div>
       </section>
 
@@ -185,36 +185,60 @@ export default function TrainingPage() {
         </div>
       </section>
 
-      {/* ── Important Notes ──────────────────────────── */}
-      <section className="section-padding border-t border-white/8">
+      {/* ── Rules & Conditions / Before You Begin ──────────────────────────── */}
+      <section id="rules-and-requirements" className="section-padding border-t border-white/8 scroll-mt-20">
         <div className="container-main">
-          <div className="mx-auto max-w-2xl rounded-2xl border border-white/10 bg-white/[0.02] p-6 sm:p-8">
-            <h3 className="type-sub mb-4 text-white">Before You Begin</h3>
-            <ul className="flex flex-col gap-3">
-              {[
-                'The assessment must be completed in a single uninterrupted session of 45 minutes.',
-                'Use of AI tools (ChatGPT, Gemini, Claude, Copilot) is strictly not permitted.',
-                'Ensure a stable internet connection before starting.',
-                'Have your student ID or roll number ready for registration.',
-                'Written responses are reviewed manually — write in your own voice and be honest.',
-                'Seats in the training programme are limited. All applications are evaluated thoroughly.',
-              ].map((note) => (
-                <li key={note} className="flex items-start gap-3">
-                  <svg className="mt-1 h-4 w-4 shrink-0 text-cyber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
-                  </svg>
-                  <span className="type-body text-white/60">{note}</span>
-                </li>
-              ))}
-            </ul>
+          <div className="section-header text-center">
+            <span className="type-label font-bold uppercase tracking-widest text-cyber-400">
+              Prerequisites & Guidelines
+            </span>
+            <h2 className="section-heading mt-2">Rules & Conditions Before You Begin</h2>
+            <p className="section-subheading mx-auto max-w-2xl">
+              Please review the exam policies and technical requirements carefully. Once started, the assessment runs continuously for 45 minutes.
+            </p>
+          </div>
 
-            <div className="mt-6 flex flex-col items-start gap-4 sm:flex-row">
-              <Link href="/training/register" className="btn-primary">
-                Register Now
-              </Link>
-              <Link href="/internships" className="btn-secondary">
-                View Internship Programmes
-              </Link>
+          <div className="mx-auto max-w-3xl space-y-6">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 sm:p-8 backdrop-blur-sm">
+              <h3 className="type-sub mb-4 text-white flex items-center gap-2">
+                <span className="text-cyber-400 font-mono text-lg">🛡️</span> Key Assessment Rules
+              </h3>
+              <ul className="flex flex-col gap-3.5">
+                {[
+                  'Single 45-Minute Continuous Session: The timer does not pause if you refresh or leave the window.',
+                  'Zero Tolerance for AI Assistance: Tools such as ChatGPT, Gemini, Claude, and Copilot are strictly forbidden.',
+                  'Automated Proctoring & 3-Strike Rule: Fullscreen exit or tab switching beyond the 5-second grace period triggers integrity strikes.',
+                  'Independent Thought: Written answers are manually evaluated for originality, analytical reasoning, and depth.',
+                  'Device & Connectivity: Use a desktop/laptop with a stable internet connection and keep your Student ID/Roll Number ready.',
+                  'Final Submission: Once submitted or when time runs out, answers are automatically locked and sent for evaluation.',
+                ].map((note, idx) => (
+                  <li key={idx} className="flex items-start gap-3">
+                    <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyber-500/10 border border-cyber-500/30 text-cyber-400 text-xs">
+                      ✓
+                    </div>
+                    <span className="type-body text-white/70">{note}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Bottom CTA Box */}
+            <div className="rounded-2xl border border-cyber-500/30 bg-gradient-to-r from-cyber-950/60 via-navy-900 to-cyber-950/60 p-8 text-center shadow-xl shadow-cyber-950/50">
+              <h3 className="text-2xl font-bold text-white mb-2">Ready to Start?</h3>
+              <p className="text-white/60 mb-6 max-w-lg mx-auto text-sm">
+                By clicking below, you confirm that you have read and agreed to adhere to all assessment rules and integrity terms.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link href="/training/register" className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold shadow-lg shadow-cyber-500/20 hover:scale-[1.02] transition-transform">
+                  Begin Assessment Registration
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </Link>
+                <Link href="/internships" className="btn-secondary px-6 py-3.5 text-sm">
+                  View Internship Programmes
+                </Link>
+              </div>
             </div>
           </div>
         </div>
