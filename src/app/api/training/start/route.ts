@@ -56,20 +56,46 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Assessment already submitted' }, { status: 409 });
     }
 
-    // Enforce Assessment Window: 10:00 AM - 11:00 AM IST
+    // Enforce Assessment Window: 4:00 PM - 12:00 AM (Midnight) IST
     const now = new Date();
-    const istTimeStr = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour12: false });
-    const currentIstHour = parseInt(istTimeStr.split(':')[0], 10) % 24;
+    const istHourStr = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour: 'numeric',
+      hourCycle: 'h23',
+    }).format(now);
+    const currentIstHour = parseInt(istHourStr, 10) % 24;
 
-    const accessStartHour = parseInt(process.env.ASSESSMENT_START_HOUR || '10', 10);
-    const accessEndHour = parseInt(process.env.ASSESSMENT_END_HOUR || '11', 10);
+    const accessStartHour = parseInt(process.env.ASSESSMENT_START_HOUR || '16', 10);
+    const accessEndHour = parseInt(process.env.ASSESSMENT_END_HOUR || '24', 10);
 
-    if (currentIstHour < accessStartHour) {
-      return NextResponse.json({ message: `Assessment has not started yet. The window opens at ${accessStartHour}:00 IST.` }, { status: 403 });
-    }
+    const formatHour = (h: number): string => {
+      if (h === 24 || h === 0) return '12:00 AM (Midnight)';
+      if (h === 12) return '12:00 PM';
+      if (h > 12) return `${h - 12}:00 PM`;
+      return `${h}:00 AM`;
+    };
 
-    if (currentIstHour >= accessEndHour) {
-      return NextResponse.json({ message: `Assessment window closed at ${accessEndHour}:00 IST.` }, { status: 403 });
+    const isWindowActive = accessEndHour === 24
+      ? currentIstHour >= accessStartHour
+      : currentIstHour >= accessStartHour && currentIstHour < accessEndHour;
+
+    if (!isWindowActive && process.env.ASSESSMENT_BYPASS_WINDOW !== 'true') {
+      if (accessEndHour === 24 && currentIstHour < 4) {
+        return NextResponse.json(
+          { message: `Assessment window closed at 12:00 AM (Midnight) IST. The window is active between ${formatHour(accessStartHour)} and 12:00 AM (Midnight) IST.` },
+          { status: 403 }
+        );
+      }
+      if (currentIstHour < accessStartHour) {
+        return NextResponse.json(
+          { message: `Assessment has not started yet. The window opens at ${formatHour(accessStartHour)} IST (Assessment Window: ${formatHour(accessStartHour)} – ${formatHour(accessEndHour)} IST).` },
+          { status: 403 }
+        );
+      }
+      return NextResponse.json(
+        { message: `Assessment window closed at ${formatHour(accessEndHour)} IST.` },
+        { status: 403 }
+      );
     }
 
     // Record start time server-side — this is the source of truth for the timer

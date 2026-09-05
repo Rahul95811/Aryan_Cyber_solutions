@@ -123,9 +123,9 @@ export default async function RulesPage() {
                   <li>When time expires, the assessment is automatically submitted.</li>
                 </ul>
                 <div className="mt-6 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
-                  <h3 className="mb-2 text-sm font-bold uppercase tracking-widest text-amber-500">Assessment Window: 10:00 AM – 11:00 AM IST</h3>
+                  <h3 className="mb-2 text-sm font-bold uppercase tracking-widest text-amber-500">Assessment Window: 4:00 PM – 12:00 AM (Midnight) IST</h3>
                   <p className="text-sm text-amber-500/80">
-                    Assessment starts when you begin the assessment during the access window. Once started, you receive the full 45 minutes. The 11:00 AM cutoff applies only to new starts.
+                    Assessment starts when you begin the assessment during the access window. Once started, you receive the full 45 minutes. The 12:00 AM (Midnight) cutoff applies only to new starts.
                   </p>
                 </div>
               </div>
