@@ -156,9 +156,11 @@ function CurriculumAccordion({ program }: { program: InternshipProgram }) {
 function OverlayContent({
   program,
   onClose,
+  isMobile = false,
 }: {
   program: InternshipProgram;
   onClose: () => void;
+  isMobile?: boolean;
 }) {
   const [showCurriculum, setShowCurriculum] = useState(false);
 
@@ -171,13 +173,13 @@ function OverlayContent({
   ];
 
   return (
-    <div className="flex max-h-full flex-col">
+    <div className={`flex flex-col ${isMobile ? "min-h-0 flex-1 overflow-hidden" : "max-h-full"}`}>
       <div className={`relative h-24 shrink-0 overflow-hidden rounded-t-[18px] bg-gradient-to-br sm:h-28 ${program.banner}`}>
         <div className="absolute inset-0 bg-gradient-to-t from-[#0d1326] via-[#0d1326]/40 to-transparent" />
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-black/30 text-white/70 backdrop-blur-sm transition-colors hover:bg-black/50 hover:text-white"
+          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-black/30 text-white/70 backdrop-blur-sm transition-colors hover:bg-black/50 hover:text-white"
           aria-label="Close"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,7 +188,18 @@ function OverlayContent({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+      <div
+        className={`p-5 pb-8 sm:p-6 ${
+          isMobile
+            ? "flex-1 min-h-0 overflow-y-auto overscroll-contain"
+            : "flex-1 overflow-y-auto"
+        }`}
+        style={{
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-y",
+        }}
+      >
         <div className="mb-3 flex items-center gap-3">
           <InternshipIcon type={program.icon} />
           <h3 className="card-title">{program.title}</h3>
@@ -339,9 +352,13 @@ export default function Internships() {
 
     if (isMobile) {
       setVisible(true);
+      const prevBodyOverflow = document.body.style.overflow;
+      const prevHtmlOverflow = document.documentElement.style.overflow;
       document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
       return () => {
-        document.body.style.overflow = "";
+        document.body.style.overflow = prevBodyOverflow;
+        document.documentElement.style.overflow = prevHtmlOverflow;
       };
     }
 
@@ -358,6 +375,7 @@ export default function Internships() {
       window.removeEventListener("resize", updatePanelPosition);
       window.removeEventListener("scroll", updatePanelPosition);
       document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     };
   }, [selectedId, isMobile, updatePanelPosition]);
 
@@ -507,8 +525,14 @@ export default function Internships() {
               aria-modal="false"
               aria-label={selected.title}
             >
-              <div className="max-h-[inherit] overflow-y-auto">
-                <OverlayContent key={selected.id} program={selected} onClose={closePanel} />
+              <div
+                className="max-h-[inherit] overflow-y-auto overscroll-contain"
+                style={{
+                  WebkitOverflowScrolling: "touch",
+                  touchAction: "pan-y",
+                }}
+              >
+                <OverlayContent key={selected.id} program={selected} onClose={closePanel} isMobile={false} />
               </div>
             </div>
           )}
@@ -540,15 +564,19 @@ export default function Internships() {
             onClick={closePanel}
           />
           <div
-            className={`absolute inset-x-0 bottom-0 max-h-[90vh] overflow-hidden rounded-t-[18px] border border-cyber-500/40 border-b-0 bg-[#0d1326]/98 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-[12px] transition-transform duration-[280ms] ease-in-out ${
+            className={`absolute inset-x-0 bottom-0 flex max-h-[calc(100dvh-1.5rem)] flex-col rounded-t-[18px] border border-cyber-500/40 border-b-0 bg-[#0d1326]/98 shadow-[0_-12px_40px_rgba(0,0,0,0.5)] backdrop-blur-[12px] transition-transform duration-[280ms] ease-in-out ${
               visible ? "translate-y-0" : "translate-y-full"
             }`}
+            style={{
+              maxHeight: "calc(100dvh - 1.5rem)",
+              touchAction: "pan-y",
+            }}
             role="dialog"
             aria-modal="true"
             aria-label={selected.title}
           >
-            <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-white/20" aria-hidden="true" />
-            <OverlayContent key={selected.id} program={selected} onClose={closePanel} />
+            <div className="mx-auto my-2.5 h-1 w-10 shrink-0 rounded-full bg-white/20" aria-hidden="true" />
+            <OverlayContent key={selected.id} program={selected} onClose={closePanel} isMobile={true} />
           </div>
         </div>
       )}
