@@ -8,9 +8,12 @@ import VideoPlaceholder from "@/components/VideoPlaceholder";
 
 function HoverVideo({ src, label }: { src: string; label: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleMouseEnter = () => {
-    videoRef.current?.play();
+    const v = videoRef.current;
+    if (!v) return;
+    v.play().then(() => setIsPlaying(true)).catch(() => {});
   };
 
   const handleMouseLeave = () => {
@@ -18,13 +21,26 @@ function HoverVideo({ src, label }: { src: string; label: string }) {
     if (!v) return;
     v.pause();
     v.currentTime = 0;
+    setIsPlaying(false);
+  };
+
+  const handleTogglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) {
+      v.play().then(() => setIsPlaying(true)).catch(() => {});
+    } else {
+      v.pause();
+      setIsPlaying(false);
+    }
   };
 
   return (
     <div
-      className="h-full w-full"
+      className="relative h-full w-full cursor-pointer"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onClick={handleTogglePlay}
     >
       <video
         ref={videoRef}
@@ -36,6 +52,14 @@ function HoverVideo({ src, label }: { src: string; label: string }) {
         className="h-full w-full object-cover"
         aria-label={label}
       />
+      {!isPlaying && (
+        <div className="pointer-events-none absolute bottom-2.5 right-2.5 flex items-center gap-1.5 rounded-md bg-navy-950/80 px-2 py-1 text-xs font-medium text-white/80 backdrop-blur-sm border border-white/10">
+          <svg className="h-3 w-3 text-cyber-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <span>Preview</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -157,8 +181,8 @@ function ProjectCard({ project }: { project: Project }) {
               </button>
 
               <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  expanded ? "mb-4 max-h-[400px] opacity-100" : "max-h-0 opacity-0"
+                className={`transition-all duration-300 ease-in-out ${
+                  expanded ? "mb-4 max-h-[800px] opacity-100 overflow-y-auto" : "max-h-0 opacity-0 overflow-hidden"
                 }`}
               >
                 <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
@@ -170,7 +194,7 @@ function ProjectCard({ project }: { project: Project }) {
                     <p className="mb-1 text-xs font-semibold tracking-wide text-white/45">Current Milestone</p>
                     <p className="type-body text-white/55">{project.details!.currentMilestone}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <p className="mb-1 text-xs font-semibold tracking-wide text-white/45">Development Status</p>
                       <p className="type-body text-white/55">{project.details!.developmentStatus}</p>
